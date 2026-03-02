@@ -2,7 +2,7 @@
 name = "bluepill-blinky"
 version = "0.1.0"
 authors = ["David Cabanis <davidcabanis@gmail.com>"]
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 cortex-m = "0.7"

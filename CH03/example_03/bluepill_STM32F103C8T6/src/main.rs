@@ -3,7 +3,6 @@
 
 use cortex_m_rt::{entry, exception};
 use panic_halt as _;
-// Required by the cortex-m-rt crate
 use stm32f1xx_hal as _;
 
 #[entry]
