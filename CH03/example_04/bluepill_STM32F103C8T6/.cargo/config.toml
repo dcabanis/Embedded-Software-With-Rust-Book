@@ -1,5 +1,5 @@
 [target.thumbv7m-none-eabi]
-runner = "gdb-multiarch -q -x debug.gdb"
+runner = "probe-rs run --chip STM32F103C8T6"
 
 rustflags = [
     "-C", 

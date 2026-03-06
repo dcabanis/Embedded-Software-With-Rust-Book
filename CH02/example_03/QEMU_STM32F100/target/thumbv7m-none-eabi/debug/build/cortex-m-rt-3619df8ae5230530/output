@@ -1,0 +1,10 @@
+cargo:rustc-check-cfg=cfg(armv6m)
+cargo:rustc-check-cfg=cfg(armv7m)
+cargo:rustc-check-cfg=cfg(armv8m)
+cargo:rustc-check-cfg=cfg(cortex_m)
+cargo:rustc-check-cfg=cfg(has_fpu)
+cargo:rustc-cfg=cortex_m
+cargo:rustc-cfg=armv7m
+cargo:rustc-link-search=/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/CH02/example_03/QEMU_STM32F100/target/thumbv7m-none-eabi/debug/build/cortex-m-rt-3619df8ae5230530/out
+cargo:rerun-if-changed=build.rs
+cargo:rerun-if-changed=link.x.in

@@ -1,0 +1,18 @@
+[package]
+authors = ["David Cabanis <davidcabanis@gmail.com>"]
+name = "cortex-m-blinky"
+edition = "2024"
+version = "0.1.0"
+
+[dependencies]
+cortex-m = "0.7"
+cortex-m-rt = "0.7"
+cortex-m-semihosting = "0.5"
+panic-halt = "1.0.0"
+# Kept for upcoming Blue Pill examples; currently unused by src/main.rs.
+stm32f1xx-hal = { version = "0.11.0", features = ["stm32f103", "medium"] }
+
+[profile.release]
+opt-level = 'z'
+codegen-units = 1
+lto = true

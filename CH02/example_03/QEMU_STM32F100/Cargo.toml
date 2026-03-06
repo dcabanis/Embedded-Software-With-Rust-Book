@@ -1,5 +1,5 @@
 [package]
-name = "bluepill-blinky"
+name = "qemu-stm32f100-blinky"
 version = "0.1.0"
 authors = ["David Cabanis <davidcabanis@gmail.com>"]
 edition = "2024"
