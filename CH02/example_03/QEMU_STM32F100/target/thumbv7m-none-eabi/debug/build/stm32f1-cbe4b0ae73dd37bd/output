@@ -1,3 +1,0 @@
-cargo:rustc-link-search=/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/CH02/example_03/QEMU_STM32F100/target/thumbv7m-none-eabi/debug/build/stm32f1-cbe4b0ae73dd37bd/out
-cargo:rerun-if-changed=src/stm32f100/device.x
-cargo:rerun-if-changed=build.rs

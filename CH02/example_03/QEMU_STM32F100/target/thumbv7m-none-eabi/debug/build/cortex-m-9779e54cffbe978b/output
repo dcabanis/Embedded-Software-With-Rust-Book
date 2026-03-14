@@ -1,4 +1,0 @@
-cargo:rustc-link-lib=static=cortex-m
-cargo:rustc-link-search=/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/CH02/example_03/QEMU_STM32F100/target/thumbv7m-none-eabi/debug/build/cortex-m-9779e54cffbe978b/out
-cargo:rustc-cfg=cortex_m
-cargo:rustc-cfg=armv7m

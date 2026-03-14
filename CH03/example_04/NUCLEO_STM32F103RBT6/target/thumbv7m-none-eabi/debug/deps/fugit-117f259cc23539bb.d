@@ -1,0 +1,10 @@
+/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/CH03/example_04/NUCLEO_STM32F103RBT6/target/thumbv7m-none-eabi/debug/deps/fugit-117f259cc23539bb.d: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/aliases.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/duration.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/helpers.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/instant.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/rate.rs
+
+/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/CH03/example_04/NUCLEO_STM32F103RBT6/target/thumbv7m-none-eabi/debug/deps/libfugit-117f259cc23539bb.rmeta: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/aliases.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/duration.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/helpers.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/instant.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/rate.rs
+
+/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/lib.rs:
+/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/aliases.rs:
+/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/duration.rs:
+/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/helpers.rs:
+/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/instant.rs:
+/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fugit-0.3.7/src/rate.rs:

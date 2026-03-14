@@ -1,0 +1,20 @@
+[package]
+edition = "2018"
+name = "app"
+version = "0.1.0"
+
+[dependencies]
+cortex-m = "0.7.2"
+cortex-m-rt = "0.7.0"
+embedded-hal = "1.0"
+panic-halt = "1.0.0"
+ssd1306 = "0.10.0"
+stm32f1xx-hal = { version = "0.11.0", default-features = false, features = ["stm32f103"] }
+
+[profile.dev]
+debug = true
+
+[profile.release]
+debug = true
+lto = true
+opt-level = "s"
