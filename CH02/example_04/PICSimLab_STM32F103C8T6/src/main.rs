@@ -4,7 +4,7 @@
 use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 use panic_halt as _;
-use stm32f1xx_hal::{pac, prelude::*};
+use stm32f1xx_hal::{pac, prelude::*, rcc::Config};
 
 #[entry]
 fn main() -> ! {
@@ -13,13 +13,14 @@ fn main() -> ! {
 
     let mut flash = dp.FLASH.constrain();
     let rcc = dp.RCC.constrain();
-    let clocks = rcc.cfgr.freeze(&mut flash.acr);
+    let mut rcc = rcc.freeze(Config::DEFAULT, &mut flash.acr);
+    let clocks = rcc.clocks;
 
-    let mut gpioc = dp.GPIOC.split();
+    let mut gpioc = dp.GPIOC.split(&mut rcc);
     let mut led = gpioc.pc13.into_push_pull_output(&mut gpioc.crh);
     let mut delay = cp.SYST.delay(&clocks);
 
-    let _ = hprintln!("Application starting...");
+    hprintln!("Application starting...");
 
     loop {
         // On Bluepill boards the PC13 LED is active-low.

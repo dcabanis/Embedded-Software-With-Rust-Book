@@ -1,17 +1,25 @@
-# List of commands
+# example_05  Sharing a peripheral with Mutex<RefCell<Option<>>> on the Blue Pill
 
-## Build 
+This example extends the Mutex pattern to a full peripheral by moving the
+`SYST` timer into a `static Mutex<RefCell<Option<SYST>>>` after configuration.
+Both the main loop and the `SysTick` exception handler borrow it inside
+`interrupt::free()` critical sections. The handler reads the current value register (CVR) and prints it via semihosting; the main loop detects 30-second intervals and prints elapsed time. 
+**A debugger must be attached to see the semihosting output.**
 
+## Build
+
+```sh
 cargo build
+```
 
-## flash and run
+## Run — Path A: probe-rs
 
-./run_openOCD.sh 
-
-Alternatively:
-
+```sh
 cargo run
+```
 
-## Clean 
+## Run — Path B: OpenOCD
 
-cargo clean
+```sh
+./run_openOCD.sh
+```

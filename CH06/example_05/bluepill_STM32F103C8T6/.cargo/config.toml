@@ -1,0 +1,15 @@
+[target.'cfg(all(target_arch = "arm", target_os = "none"))']
+runner = "probe-rs run --chip STM32F103C8Tx"
+rustflags = [
+  "-C", "link-arg=-Tlink.x",
+  "-C", "link-arg=-Tdefmt.x",
+]
+
+[build]
+target = "thumbv7m-none-eabi"
+
+# probe-rs filters defmt output by this variable, the same way RUST_LOG
+# works for host-side logging. Without it, defmt frames are received over
+# RTT but nothing is printed. Set to "trace" to see all levels.
+[env]
+DEFMT_LOG = "info"

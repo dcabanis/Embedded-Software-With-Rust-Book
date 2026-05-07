@@ -12,7 +12,7 @@ use stm32f1xx_hal::{
     prelude::*,
 };
 
-/// MCU-agnostic driver logic: only depends on embedded-hal traits.
+// MCU-agnostic driver logic: only depends on embedded-hal traits.
 fn blink_led<P, D>(led: &mut P, delay: &mut D) -> !
 where
     P: OutputPin,

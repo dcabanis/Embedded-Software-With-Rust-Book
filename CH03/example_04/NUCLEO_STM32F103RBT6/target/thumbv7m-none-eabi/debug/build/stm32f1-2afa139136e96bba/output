@@ -1,3 +1,0 @@
-cargo:rustc-link-search=/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/CH03/example_04/NUCLEO_STM32F103RBT6/target/thumbv7m-none-eabi/debug/build/stm32f1-2afa139136e96bba/out
-cargo:rerun-if-changed=src/stm32f103/device.x
-cargo:rerun-if-changed=build.rs

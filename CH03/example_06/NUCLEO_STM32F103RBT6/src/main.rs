@@ -13,7 +13,7 @@ use stm32f1xx_hal::{
     serial::{Config as UartConfig, Serial},
 };
 
-/// UART echo routine for STM32F1 HAL Tx/Rx halves
+// UART echo routine for STM32F1 HAL Tx/Rx halves
 fn uart_echo(
     tx: &mut stm32f1xx_hal::serial::Tx<pac::USART2>,
     rx: &mut stm32f1xx_hal::serial::Rx<pac::USART2>,

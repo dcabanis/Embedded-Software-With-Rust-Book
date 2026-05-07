@@ -1,22 +1,28 @@
-# List of commands
+# example_04  LED blink in PICSimLab (STM32F103C8T6 simulation)
+
+This example targets the PICSimLab simulator rather than physical hardware. The
+firmware configures the STM32F103C8T6 system clock to 72 MHz via the HSE PLL,
+initialises GPIO PC13 as a push-pull output, and toggles the LED every 500 ms
+using a SysTick-based delay. It is intended to be run inside PICSimLab's Blue
+Pill board workspace, demonstrating how to develop and test firmware without a
+physical device.
 
 ## Build
-
-Release build:
 
 ```sh
 cargo build --release
 ```
 
-Debug build:
+or for a debug build:
 
 ```sh
 cargo build
 ```
 
-## Run with PICSimLab
+## Run  PICSimLab
 
-Default run (builds release, creates workspace, launches PICSimLab, opens log terminal when available):
+The `run_picsimlab.sh` script builds the release binary, loads the workspace,
+launches PICSimLab, and opens a log terminal when one is available.
 
 ```sh
 ./run_picsimlab.sh
@@ -30,24 +36,17 @@ Show script help:
 
 ## Environment overrides
 
-Override PICSimLab executable path/command:
+Override the PICSimLab executable:
 
 ```sh
 PICSIMLAB_BIN=$HOME/Applications/PICSimLab.AppImage ./run_picsimlab.sh
 ```
 
-Override terminal application used for log window:
+Override the terminal used for the log window:
 
 ```sh
 TERMINAL_APP=gnome-terminal ./run_picsimlab.sh
 ```
 
-Use both overrides together:
-
-```sh
-PICSIMLAB_BIN=/opt/picsimlab/picsimlab TERMINAL_APP=xfce4-terminal ./run_picsimlab.sh
-```
-
-## Notes
-
-- If no supported terminal is found, PICSimLab still starts, but the log window is skipped.
+If no supported terminal is found, PICSimLab still starts but the log window is
+skipped.

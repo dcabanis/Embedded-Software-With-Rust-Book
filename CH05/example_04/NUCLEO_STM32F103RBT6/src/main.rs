@@ -30,6 +30,8 @@ fn probe_device<I: I2c>(i2c: &mut I, addr: u8) -> bool {
     i2c.write(addr, &[0x00, 0xAE]).is_ok()
 }
 
+// Extension trait that fixes the broken fmt::Write impl in ssd1306 0.10.0,
+// which only prints the last character of a string due to misuse of next_back().
 trait PrintStr {
     fn print_str(&mut self, s: &str);
 }

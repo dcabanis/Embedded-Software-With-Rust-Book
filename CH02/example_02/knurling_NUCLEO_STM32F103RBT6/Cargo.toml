@@ -57,9 +57,6 @@ defmt = "1.0"
 defmt-rtt = "1.0"
 panic-probe = { version = "1.0", features = ["print-defmt"] }
 semihosting = "0.1.24"
-# TODO(4) enter your HAL here
-# some-hal = "1.2.3"
-stm32f1xx-hal = { version = "0.11.0", features = ["stm32f103", "medium"] }
 
 [dev-dependencies]
 defmt-test = "0.4.0"

@@ -1,8 +1,8 @@
-//! Displays "Hello world!" on an external SSD1306 OLED screen via I2C.
-//!
-//! Connect an SSD1306 display to the I2C1 bus:
-//!   PB6 -> SCL
-//!   PB7 -> SDA
+// Displays "Hello world!" on an external SSD1306 OLED screen via I2C.
+//
+// Connect an SSD1306 display to the I2C1 bus:
+//   PB6 -> SCL
+//   PB7 -> SDA
 #![no_main]
 #![no_std]
 
@@ -69,7 +69,7 @@ fn main() -> ! {
         1000,
     );
 
-    // probe_device is written against embedded_hal::i2c::I2c — it knows nothing
+    // probe_device is written against embedded_hal::i2c::I2c. It knows nothing
     // about the bluepill or stm32f1xx-hal. If the display is not found, we halt
     // immediately.
     if !probe_device(&mut i2c, 0x3C) {

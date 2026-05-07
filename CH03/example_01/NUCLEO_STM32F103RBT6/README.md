@@ -1,29 +1,39 @@
-# List of commands
+# example_01  Minimal HAL project with semihosting on the NUCLEO-F103RB
 
-## Build 
+This is the chapter-3 starting-point project. The firmware takes STM32 device
+peripherals via `stm32f1xx_hal::pac::Peripherals::take()` and prints
+`"Hello, world!"` through semihosting. The purpose is to show the canonical
+embedded-Rust project structure, `#![no_std]` / `#![no_main]`, runtime entry
+point, peripheral singleton, and a HAL import, before adding any real hardware
+interaction. **A debugger must be attached to see the semihosting output.**
 
+## Build
+
+```sh
 cargo build
+```
 
-## Start the on-chip debugger (separate terminal)
+## Run — Path A: probe-rs
 
-openocd -f interface/stlink.cfg -f target/stm32f1x.cfg -c "init" -c "halt" -c "arm semihosting enable"
+`probe-rs` handles semihosting natively. Output appears in the same terminal.
 
-## Flash and debug
-
+```sh
 cargo run
+```
 
-## GDB commands 
+## Run — Path B: OpenOCD
 
-step
+Start OpenOCD with semihosting enabled in a separate terminal:
 
-next
+```sh
+openocd -f interface/stlink.cfg -f target/stm32f1x.cfg \
+  -c "init" -c "halt" -c "arm semihosting enable"
+```
 
-continue
+Then flash and run with the GDB runner in another terminal:
 
-Ctrl+c
+```sh
+cargo run
+```
 
-quit
-
-## Clean 
-
-cargo clean
+Semihosting output appears in the OpenOCD terminal.

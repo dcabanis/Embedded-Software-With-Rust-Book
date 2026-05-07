@@ -1,5 +1,5 @@
 [target.'cfg(all(target_arch = "arm", target_os = "none"))']
-runner = 'qemu-system-arm -cpu cortex-m3 -machine stm32vldiscovery -nographic -kernel target/thumbv7m-none-eabi/release/qemu-stm32f100-blinky -semihosting-config enable=on,target=native'
+runner = 'qemu-system-arm -cpu cortex-m3 -machine stm32vldiscovery -nographic -semihosting-config enable=on,target=native -kernel'
 
 rustflags = [
   "-C", "link-arg=-Tlink.x",

@@ -1,18 +1,21 @@
-# NUCLEO-STM32F103RB setup
+# example_03  SysTick exception and atomic flag with cortex-m-rt on the NUCLEO-F103RB
+
+This example replaces the manual vector table from example_02 with the `#[exception]` macro provided by `cortex-m-rt`. The SysTick timer fires every second and flips an `AtomicBool` flag. The main loop polls the flag in WFI sleep and prints an alternating message via semihosting, demonstrating the idiomatic `cortex-m-rt`  approach to safe exception handler registration. **A debugger must be attached to see the semihosting output.**
 
 ## Build
 
+```sh
 cargo build
+```
 
-## Flash and run
+## Run  Path A: probe-rs
 
-./run_openOCD.sh
-
-Alternatively:
-
+```sh
 cargo run
+```
 
-## Notes
+## Run  Path B: OpenOCD
 
-- `.cargo/config.toml` is configured for `probe-rs` chip `STM32F103RBTx`.
-- `memory.x` is configured for STM32F103RB memory map (128K flash / 20K RAM).
+```sh
+./run_openOCD.sh
+```

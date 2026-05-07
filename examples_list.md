@@ -1,7 +1,7 @@
 # Examples' list by chapters
 
 ## CH01/example_01
-The singleton patternfor peripherals
+The singleton pattern for peripherals
 
 ## CH02/example_01
 Using a project template with cargo generate
