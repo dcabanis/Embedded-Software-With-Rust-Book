@@ -2,14 +2,14 @@
 
 This example demonstrates the following techniques:
 
-1. **Configurable fault handlers** — `MemoryManagement`, `BusFault`, and
+1. **Configurable fault handlers**  `MemoryManagement`, `BusFault`, and
    `UsageFault` each route to their own `#[exception]` handler, which calls
    `panic!()` so the panic handler can log the fault via RTT.
 
-2. **A custom `#[panic_handler]`** — routes panic messages through RTT so
+2. **A custom `#[panic_handler]`**  routes panic messages through RTT so
    they appear in the probe-rs console.
 
-3. **HardFault handler with full register decode** — prints the CPU register
+3. **HardFault handler with full register decode**  prints the CPU register
    snapshot from `ExceptionFrame`, then reads and decodes HFSR, CFSR
    (including the UFSR, BFSR, and MMFSR sub-fields), and prints the faulting
    address from MMFAR or BFAR when the address-valid bits are set.
@@ -46,7 +46,7 @@ cargo build
 Terminal 2, connect GDB, start the RTT server:
 
 ```sh
-gdb-multiarch target/thumbv7m-none-eabi/release/app
+gdb-multiarch target/thumbv7m-none-eabi/debug/app
 ```
 
 ```

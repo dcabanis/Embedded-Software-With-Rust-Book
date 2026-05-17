@@ -51,9 +51,9 @@ Expected output (one line per second):
 
 ```
 INFO  Structured log from defmt
-└─ app::__cortex_m_rt_main @ src/main.rs:12
+└─ app::bluepill_STM32F103C8T6/src/main.rs:13
 INFO  Structured log from defmt
-└─ app::__cortex_m_rt_main @ src/main.rs:12
+└─ app::bluepill_STM32F103C8T6/src/main.rs:13
 ```
 
 Press `Ctrl-c` to stop.

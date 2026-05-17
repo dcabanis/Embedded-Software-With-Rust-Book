@@ -47,6 +47,7 @@ fi
   -c "init" \
   -c "halt" \
   -c "arm semihosting enable" \
-  -c "arm semihosting_fileio enable" \
   -c "program $ELF verify" \
-  -c "reset run"
+  -c "reset run" \
+  -c "wait_halt 5000" \
+  -c "shutdown"

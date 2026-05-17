@@ -14,12 +14,6 @@ semihosting output.**
 cargo build
 ```
 
-## Run  Path A: probe-rs
-
-```sh
-cargo run
-```
-
 ## Run  Path B: OpenOCD
 
 ```sh

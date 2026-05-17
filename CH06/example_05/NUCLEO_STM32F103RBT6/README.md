@@ -51,9 +51,9 @@ Expected output (one line per second):
 
 ```
 INFO  Structured log from defmt
-└─ app::__cortex_m_rt_main @ src/main.rs:12
+└─ app::NUCLEO_STM32F103RBT6/src/main.rs:13
 INFO  Structured log from defmt
-└─ app::__cortex_m_rt_main @ src/main.rs:12
+└─ app::NUCLEO_STM32F103RBT6/src/main.rs:13
 ```
 
 Press `Ctrl-c` to stop.
@@ -102,6 +102,6 @@ WARN probe_rs::util::rtt: Insufficient DWARF info; compile with `debug = 2`
 ```
 
 and the source location (`@ src/main.rs:N`) is omitted from log output.
-The `debug = 2` flag does not affect optimisation level or runtime performance;
+The `debug = 2` flag does not affect optimization level or runtime performance;
 it only increases the size of the ELF file on the host, not the firmware
 flashed to the device.

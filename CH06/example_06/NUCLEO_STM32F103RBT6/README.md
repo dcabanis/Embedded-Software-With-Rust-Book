@@ -3,14 +3,14 @@
 This example demonstrates the following techniques on the STM32F103RBT6
 (NUCLEO-F103RB):
 
-1. **Configurable fault handlers** — `MemoryManagement`, `BusFault`, and
+1. **Configurable fault handlers**  `MemoryManagement`, `BusFault`, and
    `UsageFault` each route to their own `#[exception]` handler, which calls
    `panic!()` so the panic handler can log the fault via RTT.
 
-2. **A custom `#[panic_handler]`** — routes panic messages through RTT so
+2. **A custom `#[panic_handler]`**  routes panic messages through RTT so
    they appear in the probe-rs console.
 
-3. **HardFault handler with full register decode** — prints the CPU register
+3. **HardFault handler with full register decode**  prints the CPU register
    snapshot from `ExceptionFrame`, then reads and decodes HFSR, CFSR
    (including the UFSR, BFSR, and MMFSR sub-fields), and prints the faulting
    address from MMFAR or BFAR when the address-valid bits are set.
@@ -47,7 +47,7 @@ cargo build
 Terminal 2, connect GDB, start the RTT server:
 
 ```sh
-gdb-multiarch target/thumbv7m-none-eabi/release/app
+gdb-multiarch target/thumbv7m-none-eabi/debug/app
 ```
 
 ```
@@ -55,7 +55,7 @@ gdb-multiarch target/thumbv7m-none-eabi/release/app
 (gdb) monitor rtt setup 0x20000000 0x5000 "SEGGER RTT"
 (gdb) monitor rtt start
 (gdb) monitor rtt server start 9090 0
-(gdb) continue
+(gdb) next
 ```
 
 Terminal 3, read RTT output:
@@ -73,7 +73,7 @@ RTT control block (start of SRAM, covering the full 20 KiB of the NUCLEO-F103RB)
 Stop in reverse order:
 
 - Terminal 3 (telnet): `Ctrl-]` then type `quit` and press Enter
-- Terminal 2 (GDB): `(gdb) quit` — GDB disconnects from OpenOCD
+- Terminal 2 (GDB): `(gdb) quit`  GDB disconnects from OpenOCD
 - Terminal 1 (OpenOCD): `Ctrl-C` terminates the OpenOCD process
 
 ## Demonstration: two modes

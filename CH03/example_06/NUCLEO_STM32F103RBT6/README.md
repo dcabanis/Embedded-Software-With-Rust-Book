@@ -34,4 +34,12 @@ Then flash and run the firmware:
 cargo run
 ```
 
+## Expected Output
+
 Characters typed in picocom are echoed back by the firmware.
+
+## Exiting picocom
+
+```sh
+Ctrl+a Ctrl+x
+```

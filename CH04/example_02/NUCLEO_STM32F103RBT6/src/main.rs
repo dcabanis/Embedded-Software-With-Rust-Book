@@ -38,6 +38,7 @@ fn main() -> ! {
             hprintln!("How do you do?");
         }
     }
+    // undefined instruction causing a fault
     asm::udf();
 }
 
