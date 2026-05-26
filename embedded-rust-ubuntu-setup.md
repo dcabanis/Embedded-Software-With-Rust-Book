@@ -178,8 +178,6 @@ sudo dpkg -i PICSimLab_<version>_<date>_Ubuntu_<release>_amd64.deb
 sudo apt --fix-broken install        # pulls in any missing dependencies
 ```
 
-> **Note for Ubuntu 26.04 users:** the `.deb` referenced in the original setup history (`PICSimLab_0.9.2_241005_Ubuntu_24.04.1_LTS_amd64.deb`) was built for 24.04. Check the releases page for a 26.04-compatible build, or install via the AppImage / Flatpak alternative if no native package is available yet.
-
 ---
 
 ## 7. Miscellaneous helpers
