@@ -1,0 +1,15 @@
+[default.general]
+chip = "STM32F103RBTx"
+
+[default.flashing]
+enabled = true
+
+[default.reset]
+enabled = true
+halt_afterwards = false
+
+[default.rtt]
+enabled = false
+
+[default.gdb]
+enabled = false

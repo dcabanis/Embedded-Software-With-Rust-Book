@@ -12,6 +12,7 @@ build only the variant that matches your hardware.
 - [Chapter 4 — Bare-Metal Startup, Linker Scripts, and Interrupt Handling](#chapter-4--bare-metal-startup-linker-scripts-and-interrupt-handling)
 - [Chapter 5 — Hardware Abstraction: From Raw MMIO to HAL](#chapter-5--hardware-abstraction-from-raw-mmio-to-hal)
 - [Chapter 6 — Debugging, Logging, and Profiling](#chapter-6--debugging-logging-and-profiling)
+- [Chapter 7 — Managing Stack and Heap in Resource-Constrained Systems](#chapter-7--managing-stack-and-heap-in-resource-constrained-systems)
 
 ---
 
@@ -420,3 +421,145 @@ Cortex-M3.
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH06/example_09/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH06/example_09/NUCLEO_STM32F103RBT6)
+
+---
+
+## Chapter 7 — Managing Stack and Heap in Resource-Constrained Systems
+
+### example_01 — Dynamic allocation with `embedded-alloc` (LLFF heap)
+
+This example enables the `alloc` crate in a `no_std` firmware by installing the
+`embedded-alloc` LLFF (Last-Level First-Fit) heap as the global allocator. A
+4 KiB backing store is carved out of RAM using a `static mut [MaybeUninit<u8>]`
+array and handed to the allocator before any allocation is attempted. The
+firmware then exercises `Box::new` (allocates a `u32` on the heap, logs its
+value, and drops it back) and `Vec::push` (builds a three-element vector), both
+logged via `defmt`. The example shows the minimum wiring needed to bring the
+full `alloc` API online in a bare-metal Rust project.
+
+**Available on:**
+[Blue Pill (STM32F103C8T6)](CH07/example_01/bluepill_STM32F103C8T6) ·
+[NUCLEO-F103RB (STM32F103RBT6)](CH07/example_01/NUCLEO_STM32F103RBT6)
+
+### example_02 — Buddy-system allocator with `buddy_system_allocator`
+
+This example replaces the LLFF heap from example_01 with a buddy-system
+allocator from the `buddy_system_allocator` crate. The allocator is
+parameterised by an ORDER constant (32) that sets the maximum block size to
+2^32 bytes; allocations are rounded up to the nearest power of two in exchange
+for bounded worst-case timing and predictable fragmentation behaviour. The same
+`Box::new` and `Vec::push` workload from example_01 is repeated so the two
+allocator strategies can be compared directly.
+
+**Available on:**
+[Blue Pill (STM32F103C8T6)](CH07/example_02/bluepill_STM32F103C8T6) ·
+[NUCLEO-F103RB (STM32F103RBT6)](CH07/example_02/NUCLEO_STM32F103RBT6)
+
+### example_03 — Heap-allocated event log with `Vec<String>`
+
+This example demonstrates a practical use of the heap: accumulating a runtime
+event log as a `Vec<String>`. A `record_event()` helper formats each entry with
+`format!()` and appends it to a heap-allocated vector of heap-allocated strings.
+Three events are logged (UART, I2C, GPIO), and the completed log is printed via
+`defmt`. The example illustrates that idiomatic heap usage in `no_std` firmware
+looks exactly like standard Rust once the global allocator is installed.
+
+**Available on:**
+[Blue Pill (STM32F103C8T6)](CH07/example_03/bluepill_STM32F103C8T6) ·
+[NUCLEO-F103RB (STM32F103RBT6)](CH07/example_03/NUCLEO_STM32F103RBT6)
+
+### example_04 — Fixed-capacity collections with `heapless`
+
+This example demonstrates heap-free, fixed-capacity data structures from the
+`heapless` crate as a drop-in alternative to `Vec` and `String`. A `Vec<u8,
+LINE_LEN>` accumulates incoming bytes and a `String<RESP_LEN>` holds the
+response — both sized entirely at compile time with no allocator required. A
+`feed_byte()` function processes a simulated UART byte stream: it dispatches
+`HELLO` and `VERSION` commands to `handle_command()`, returns `ERR unknown` for
+unrecognised input, and detects buffer overflow when a line exceeds `LINE_LEN`
+bytes without a newline. All responses are logged via `defmt`.
+
+**Available on:**
+[Blue Pill (STM32F103C8T6)](CH07/example_04/bluepill_STM32F103C8T6) ·
+[NUCLEO-F103RB (STM32F103RBT6)](CH07/example_04/NUCLEO_STM32F103RBT6)
+
+### example_05 — Stack-only collections with `arrayvec`
+
+This example demonstrates the `arrayvec` crate's `ArrayVec<T, N>` and
+`ArrayString<N>` types, which store their elements entirely on the stack with no
+heap involvement. Both panicking and fallible APIs are shown: `push` / `push_str`
+panic on overflow (suitable for code paths that are statically known to be
+in-bounds), while `try_push` / `try_push_str` return a `Result` for input-driven
+paths where overflow is a real possibility. A `try_push_str` that would exceed
+the 32-byte `ArrayString` capacity is demonstrated, showing that the string is
+left unchanged after a failed attempt.
+
+**Available on:**
+[Blue Pill (STM32F103C8T6)](CH07/example_05/bluepill_STM32F103C8T6) ·
+[NUCLEO-F103RB (STM32F103RBT6)](CH07/example_05/NUCLEO_STM32F103RBT6)
+
+### example_06 — Hybrid stack-or-heap collections with `tinyvec` and `smallvec`
+
+This example demonstrates two hybrid collection crates that store a fixed number
+of elements inline (on the stack) and spill to the heap only when that capacity
+is exceeded. `TinyVec<[T; N]>` requires `T: Default` and is fully safe;
+`SmallVec<[T; N]>` uses `unsafe` internally to remove the `Default` requirement.
+Both are initialised with 8 inline elements (no heap), and a ninth push triggers
+the spill in each case. The `is_heap()` / `spilled()` methods are logged before
+and after the spill to make the transition visible. A global `embedded-alloc`
+heap is installed to service the spill allocations.
+
+**Available on:**
+[Blue Pill (STM32F103C8T6)](CH07/example_06/bluepill_STM32F103C8T6) ·
+[NUCLEO-F103RB (STM32F103RBT6)](CH07/example_06/NUCLEO_STM32F103RBT6)
+
+### example_07 — Stack-overflow detection with `flip-link`
+
+This example demonstrates the `flip-link` linker wrapper, which rearranges the
+RAM layout so the stack occupies the bottom of RAM rather than the top. In the
+default layout a stack overflow silently overwrites `.data` and `.bss`; with
+`flip-link` the overflow hits unmapped memory first, generating a deterministic
+bus fault. The firmware starts infinite recursion (512 bytes per frame via a
+`MaybeUninit` buffer and a volatile write), logging the current depth via `defmt`
+on every frame. A `static mut DEVICE_ID` is placed in `.data` to make the
+corruption contrast visible: without `flip-link` the RTT stream cuts off early
+and `DEVICE_ID` is overwritten; with `flip-link` the log continues cleanly until
+the bus fault halts execution at a deterministic address.
+
+**Available on:**
+[Blue Pill (STM32F103C8T6)](CH07/example_07/bluepill_STM32F103C8T6) ·
+[NUCLEO-F103RB (STM32F103RBT6)](CH07/example_07/NUCLEO_STM32F103RBT6)
+
+### example_08 — Stack-usage measurement with canary painting
+
+This example demonstrates a manual stack-painting technique for measuring peak
+stack usage without an RTOS or a debugger. `paint_stack()` fills free RAM from
+`_stack_bottom` up to just below the current stack pointer with a 0xDEADBEEF
+canary pattern. After calling `work_shallow()` (256-byte frame) and
+`work_deep()` (512-byte frame that calls `work_shallow()`), `unused_stack_words()`
+scans from the bottom upward and counts surviving canary words. The difference
+gives the peak stack consumption of each call chain. Output is sent via
+semihosting (`hprintln!`) so no RTT ring buffer occupies the unpainted region
+and skews the measurement. `#[inline(never)]` is applied to both work functions
+to prevent the optimiser from merging their stack frames.
+
+**Available on:**
+[Blue Pill (STM32F103C8T6)](CH07/example_08/bluepill_STM32F103C8T6) ·
+[NUCLEO-F103RB (STM32F103RBT6)](CH07/example_08/NUCLEO_STM32F103RBT6)
+
+### example_09 — MPU stack guard on the STM32F3DISCOVERY
+
+This example configures the Cortex-M4 Memory Protection Unit (MPU) as a
+hardware stack guard on the STM32F303VCT6. A 32-byte no-access execute-never
+region (MPU region 0) is installed at `_stack_bottom`, the lowest valid stack
+address defined in `memory.x`. Any read, write, or instruction fetch within that
+region triggers a MemManage fault (or HardFault if MemManage is not separately
+enabled), converting a silent stack overflow into a deterministic, debugger-
+visible fault. The MPU is enabled with `PRIVDEFENA` so all other memory regions
+retain their default access permissions. DSB and ISB barriers ensure the
+configuration takes effect before the next memory access. The STM32F3DISCOVERY
+is used here because its Cortex-M4 core includes the MPU; the Blue Pill's
+Cortex-M3 also has an MPU but this example targets the Discovery board.
+
+**Available on:**
+[STM32F3DISCOVERY (STM32F303VCT6)](CH07/example_09/stm32f3discovery_STM32F303VCT6)

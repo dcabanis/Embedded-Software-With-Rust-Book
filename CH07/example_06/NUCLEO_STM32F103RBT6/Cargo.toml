@@ -1,0 +1,18 @@
+[package]
+name = "app"
+version = "0.1.0"
+authors = ["David Cabanis <davidcabanis@gmail.com>"]
+edition = "2021"
+
+[profile.release]
+debug = 2
+
+[dependencies]
+cortex-m = { version = "0.7", features = ["critical-section-single-core"] }
+cortex-m-rt = "0.7"
+defmt = "1.0"
+defmt-rtt = "1.0"
+panic-probe = { version = "1.0", features = ["print-defmt"] }
+embedded-alloc = { version = "0.7.0", features = ["llff"] }
+tinyvec = { version = "1", features = ["alloc"] }
+smallvec = { version = "1", default-features = false }

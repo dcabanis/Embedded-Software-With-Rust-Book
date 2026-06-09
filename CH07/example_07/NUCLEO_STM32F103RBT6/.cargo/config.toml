@@ -1,0 +1,18 @@
+[target.'cfg(all(target_arch = "arm", target_os = "none"))']
+runner = "probe-rs run --chip STM32F103RBTx"
+rustflags = [
+  "-C", "link-arg=-Tlink.x",
+  "-C", "link-arg=-Tdefmt.x",
+  # flip-link moves the stack to the bottom of RAM so that any overflow
+  # hits unmapped memory and triggers a precise bus fault instead of
+  # silently corrupting .data / .bss.
+  # Install once with: cargo install flip-link
+  # To observe the silent-corruption failure mode, comment out the next line.
+  "-C", "linker=flip-link",
+]
+
+[build]
+target = "thumbv7m-none-eabi"
+
+[env]
+DEFMT_LOG = "info"
