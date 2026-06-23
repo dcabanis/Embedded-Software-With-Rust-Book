@@ -16,6 +16,7 @@ This example demonstrates the following techniques on the STM32F103RBT6
    address from MMFAR or BFAR when the address-valid bits are set.
 
 A deliberate fault is injected on every boot to drive the demonstration.
+The active scenario is selected by the `FAULT_DEMO` constant in `main.rs`.
 
 ## Build
 
@@ -76,11 +77,28 @@ Stop in reverse order:
 - Terminal 2 (GDB): `(gdb) quit`  GDB disconnects from OpenOCD
 - Terminal 1 (OpenOCD): `Ctrl-C` terminates the OpenOCD process
 
-## Demonstration: two modes
+## Demonstration: three modes
 
-The default firmware **enables** the three configurable fault exceptions via
-`SHCSR`. With that in place, a `UDF` instruction routes to `UsageFault()`,
-which calls `panic!()`. RTT shows:
+The fault scenario is selected by the `FAULT_DEMO` constant near the top of
+`main` (just before `#[entry]`). Change the value and re-flash to switch.
+
+### FAULT_DEMO = 0  Software panic via `unwrap()` on `None` (default)
+
+`unwrap()` calls `panic!()` internally when the `Option` is `None`.  No CPU
+exception is involved; control jumps straight to the `#[panic_handler]`, which
+prints the panic message (including source location) over RTT:
+
+```
+MemManage, BusFault, UsageFault handlers enabled.
+Triggering software panic via unwrap() on None...
+panicked at 'called `Option::unwrap()` on a `None` value', src/main.rs:...
+```
+
+### FAULT_DEMO = 1  Hardware UsageFault via the UDF instruction
+
+`UDF` is an architecturally undefined instruction; the processor raises a
+UsageFault. With `SHCSR` enabled the fault routes to `UsageFault()`, which
+calls `panic!()`. RTT shows:
 
 ```
 MemManage, BusFault, UsageFault handlers enabled.

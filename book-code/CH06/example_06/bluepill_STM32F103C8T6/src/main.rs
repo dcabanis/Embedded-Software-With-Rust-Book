@@ -115,6 +115,13 @@ unsafe fn HardFault(ef: &ExceptionFrame) -> ! {
     loop {}
 }
 
+// ── Fault scenario selector ───────────────────────────────────────────────────
+//
+//  0 – Software panic via unwrap() on a None value  → #[panic_handler]
+//  1 – Hardware UsageFault via the UDF instruction   → #[exception] UsageFault
+//        (or HardFault when the configurable-fault block below is commented out)
+const FAULT_DEMO: u8 = 0;
+
 // ── Entry point ───────────────────────────────────────────────────────────────
 
 #[entry]
@@ -140,9 +147,22 @@ fn main() -> ! {
     p.SCB.enable(Exception::UsageFault);
     rprintln!("MemManage, BusFault, UsageFault handlers enabled.");
 
-    // Trigger a UsageFault via the UDF (undefined) instruction.
-    // With SHCSR enabled: routes to UsageFault() -> panic!() -> RTT message.
-    // With SHCSR disabled: escalates to HardFault() -> full register decode.
-    rprintln!("Triggering UsageFault via UDF...");
-    cortex_m::asm::udf();
+    match FAULT_DEMO {
+        0 => {
+            // Software panic: unwrap() on a None value calls the #[panic_handler]
+            // directly — no CPU exception is raised.  The panic message includes
+            // the source location and is printed via RTT before looping forever.
+            rprintln!("Triggering software panic via unwrap() on None...");
+            let value: Option<u32> = None;
+            let _ = value.unwrap(); // panics at runtime; unreachable!() satisfies the `!` return
+            unreachable!()
+        }
+        _ => {
+            // Hardware fault: UDF is an architecturally undefined instruction.
+            // With SHCSR enabled: routes to UsageFault() -> panic!() -> RTT message.
+            // With SHCSR disabled: escalates to HardFault() -> full register decode.
+            rprintln!("Triggering UsageFault via UDF...");
+            cortex_m::asm::udf();
+        }
+    }
 }
