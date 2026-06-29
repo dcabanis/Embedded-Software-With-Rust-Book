@@ -35,6 +35,7 @@ This is the minimal "hello world" template for an STM32F103 project. The firmwar
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH02/example_01/bluepill_STM32F103C8T6) ·
+[PICSimLab (STM32F103C8T6)](CH02/example_01/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH02/example_01/NUCLEO_STM32F103RBT6)
 
 ### example_02 — Hello world with Knurling
@@ -69,6 +70,7 @@ This is the chapter-3 starting-point project. The firmware takes STM32 device pe
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH03/example_01/bluepill_STM32F103C8T6) ·
+[PICSimLab (STM32F103C8T6)](CH03/example_01/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH03/example_01/NUCLEO_STM32F103RBT6)
 
 ### example_02 — Conditional compile with features
@@ -103,6 +105,7 @@ This example demonstrates writing MCU-agnostic driver logic using the `embedded-
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH03/example_05/bluepill_STM32F103C8T6) ·
+[PICSimLab (STM32F103C8T6)](CH03/example_05/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH03/example_05/NUCLEO_STM32F103RBT6)
 
 ### example_06 — UART echo on USART1
@@ -123,6 +126,7 @@ This example implements the entire MCU startup from scratch, without the `cortex
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH04/example_01/bluepill_STM32F103C8T6) ·
+[PICSimLab (STM32F103C8T6)](CH04/example_01/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH04/example_01/NUCLEO_STM32F103RBT6)
 
 ### example_02 — Manually creating a vector table and exception handlers
@@ -132,6 +136,7 @@ Handlers for NMI, HardFault, MemManage, BusFault, UsageFault, SVCall, and PendSV
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH04/example_02/bluepill_STM32F103C8T6) ·
+[PICSimLab (STM32F103C8T6)](CH04/example_02/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH04/example_02/NUCLEO_STM32F103RBT6)
 
 ### example_03 — Simplifying exception and interrupt handling with a run-time crate
@@ -140,6 +145,7 @@ This example replaces the manual vector table from example_02 with the `#[except
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH04/example_03/bluepill_STM32F103C8T6) ·
+[PICSimLab (STM32F103C8T6)](CH04/example_03/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH04/example_03/NUCLEO_STM32F103RBT6)
 
 ### example_04 — Safe shared access using `cortex_m::interrupt::Mutex`
@@ -149,6 +155,7 @@ This example demonstrates how to safely share a variable between the main execut
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH04/example_04/bluepill_STM32F103C8T6) ·
+[PICSimLab (STM32F103C8T6)](CH04/example_04/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH04/example_04/NUCLEO_STM32F103RBT6)
 
 ### example_05 — Sharing peripherals with mutex and interior mutability
@@ -159,6 +166,7 @@ intervals and prints elapsed time.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH04/example_05/bluepill_STM32F103C8T6) ·
+[PICSimLab (STM32F103C8T6)](CH04/example_05/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH04/example_05/NUCLEO_STM32F103RBT6)
 
 ---
@@ -173,6 +181,7 @@ The goal is to establish a reference point before showing how PAC and HAL crates
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH05/example_01/bluepill_STM32F103C8T6) ·
+[PICSimLab (STM32F103C8T6)](CH05/example_01/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH05/example_01/NUCLEO_STM32F103RBT6)
 
 ### example_02 — Type-safe MMIO via PAC
@@ -181,6 +190,7 @@ This example replaces the raw `*mut u32` writes from example_01 with the type-sa
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH05/example_02/bluepill_STM32F103C8T6) ·
+[PICSimLab (STM32F103C8T6)](CH05/example_02/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH05/example_02/NUCLEO_STM32F103RBT6)
 
 ### example_03 — 1 Hz LED blink using stm32f1xx-hal
@@ -189,6 +199,7 @@ This example demonstrates the top HAL layer of the embedded-Rust stack. The `stm
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH05/example_03/bluepill_STM32F103C8T6) ·
+[PICSimLab (STM32F103C8T6)](CH05/example_03/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH05/example_03/NUCLEO_STM32F103RBT6)
 
 ### example_04 — SSD1306 OLED display over I2C
@@ -207,6 +218,7 @@ A `global_asm!()` block defines a counted delay loop. `core::arch::asm!()` is us
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH05/example_05/bluepill_STM32F103C8T6) ·
+[PICSimLab (STM32F103C8T6)](CH05/example_05/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH05/example_05/NUCLEO_STM32F103RBT6)
 
 ---
@@ -219,6 +231,7 @@ This example demonstrates semihosting output on the STM32F103. The firmware prin
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH06/example_01/bluepill_STM32F103C8T6) ·
+[PICSimLab (STM32F103C8T6)](CH06/example_01/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH06/example_01/NUCLEO_STM32F103RBT6)
 
 ### example_02 — UART logging with `writeln!()`
@@ -227,6 +240,7 @@ This example demonstrates standalone UART output. The firmware configures USART1
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH06/example_02/bluepill_STM32F103C8T6) ·
+[PICSimLab (STM32F103C8T6)](CH06/example_02/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH06/example_02/NUCLEO_STM32F103RBT6)
 
 ### example_03 — ITM logging with `iprintln!()`

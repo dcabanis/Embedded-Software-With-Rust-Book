@@ -1,0 +1,25 @@
+[package]
+name = "app"
+version = "0.1.0"
+authors = ["dcabanis"]
+edition = "2024"
+
+[dependencies]
+cortex-m = "0.7"
+cortex-m-rt = "0.7"
+cortex-m-semihosting = "0.5"
+panic-halt = "1.0.0"
+
+[dependencies.stm32f1xx-hal]
+version = "0.11.0"
+features = ["stm32f103"]
+
+[profile.dev.package."*"]
+opt-level = "s"
+
+[profile.release]
+codegen-units = 1
+incremental = false
+debug = true
+lto = true
+opt-level = "s"

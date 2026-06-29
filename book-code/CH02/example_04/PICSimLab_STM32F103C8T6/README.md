@@ -1,11 +1,6 @@
 # example_04  LED blink in PICSimLab (STM32F103C8T6 simulation)
 
-This example targets the PICSimLab simulator rather than physical hardware. The
-firmware configures the STM32F103C8T6 system clock to 72 MHz via the HSE PLL,
-initialises GPIO PC13 as a push-pull output, and toggles the LED every 500 ms
-using a SysTick-based delay. It is intended to be run inside PICSimLab's Blue
-Pill board workspace, demonstrating how to develop and test firmware without a
-physical device.
+This example targets the PICSimLab simulator rather than physical hardware. The firmware configures the STM32F103C8T6 system clock to 72 MHz via the HSE PLL, initialises GPIO PC13 as a push-pull output, and toggles the LED every 500 ms using a SysTick-based delay. It is intended to be run inside PICSimLab's Blue Pill board workspace, demonstrating how to develop and test firmware without a physical device.
 
 ## Build
 
