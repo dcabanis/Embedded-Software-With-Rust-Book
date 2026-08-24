@@ -12,6 +12,7 @@ Each example lives inside a board-specific sub-folder — clone the repo and bui
 - [Chapter 5 — Hardware Abstraction: From Raw MMIO to HAL](#chapter-5--hardware-abstraction-from-raw-mmio-to-hal)
 - [Chapter 6 — Debugging, Logging, and Profiling](#chapter-6--debugging-logging-and-profiling)
 - [Chapter 7 — Managing Stack and Heap in Resource-Constrained Systems](#chapter-7--managing-stack-and-heap-in-resource-constrained-systems)
+- [Chapter 10 — Rust-C Integration and Migration](#chapter-10--rust-c-integration-and-migration)
 
 ---
 
@@ -383,3 +384,47 @@ Cortex-M3 also has an MPU but this example targets the Discovery board.
 
 **Available on:**
 [STM32F3DISCOVERY (STM32F303VCT6)](CH07/example_09/stm32f3discovery_STM32F303VCT6)
+
+---
+
+## Chapter 10 — Rust-C Integration and Migration
+
+### example_01 — Calling C from Rust: FFI basics and safe wrappers
+
+This example demonstrates calling hand-written C code from Rust. A small C library exposes a scalar `add()` function and a `void update_status(DeviceStatus*, float)` function that mutates a struct through a pointer. On the Rust side, the C declarations are quarantined inside a private `ffi` module; `DeviceStatus` is `#[repr(C)]`, matching the C header's layout exactly, with a `const _: () = assert!(...)` pinning the struct size at compile time. `DeviceState` is deliberately *not* a plain `#[repr(u8)] enum`: since C could in principle write any byte into that field, it's a `#[repr(transparent)]` wrapper around a `u8`, and only `DeviceState::checked()` turns a validated byte into a real, exhaustively-matchable `CheckedDeviceState` enum. `safe_add()` and `safe_update_status()` wrap the `unsafe extern "C"` calls behind ordinary safe functions. The C file is compiled and linked automatically by `build.rs` using the `cc` crate — no manual `#[link(...)]` attribute or prebuilt `.a` file is needed.
+
+**Available on:**
+[Blue Pill (STM32F103C8T6)](CH10/example_01/bluepill_STM32F103C8T6) ·
+[NUCLEO-F103RB (STM32F103RBT6)](CH10/example_01/NUCLEO_STM32F103RBT6)
+
+### example_02 — Calling Rust from C: a `no_std` static library
+
+This example inverts the usual project shape: a plain C application owns `main()`, a hand-written Cortex-M3 vector table and `Reset_Handler` (`startup.s`), and the linker script, and links against a Rust `no_std` static library built separately. The Rust library exposes `square()` and an integer-error-code `divide()` (`0` success, `-1` divide by zero or overflow, `-2` null output pointer), declared `unsafe extern "C" fn` since a null check alone doesn't prove the output pointer is valid for a write; `a.checked_div(b)` catches both division by zero and `i32::MIN / -1`, which panics unconditionally in Rust regardless of build profile. A `Makefile` reproduces the book's exact two-step build: `cargo build` compiles the Rust static library, then `arm-none-eabi-gcc` links `main.c` + `startup.s` against it. `main.c` checks every result, including the overflow case, and blinks the onboard LED steadily if the two sides agree on the ABI, or latches it on solid if they don't.
+
+**Available on:**
+[Blue Pill (STM32F103C8T6)](CH10/example_02/bluepill_STM32F103C8T6) ·
+[NUCLEO-F103RB (STM32F103RBT6)](CH10/example_02/NUCLEO_STM32F103RBT6)
+
+### example_03 — Advanced FFI: arrays, C strings, and stateful callbacks
+
+This example covers the "hard cases" of FFI beyond plain scalars and structs: `sum_array()` passes a Rust slice as a pointer + length pair; `c_string_len()` takes a `&CStr` (built from a `c"..."` literal) rather than `&str`, so the type system rules out passing an unterminated Rust string; and `register_callback_ctx()` / `trigger_callback_ctx()` implement the two-step, context-carrying callback pattern where C stores an opaque `void *ctx` alongside a function pointer and hands it back unchanged on every call. The Rust side's `count_events()` is the *trampoline*: an `unsafe extern "C" fn` that casts the incoming `void *ctx` back into `&AtomicU32` and increments it — marked `unsafe` because nothing in its signature proves that pointer is still valid — driven once a second by a polled SysTick.
+
+**Available on:**
+[Blue Pill (STM32F103C8T6)](CH10/example_03/bluepill_STM32F103C8T6) ·
+[NUCLEO-F103RB (STM32F103RBT6)](CH10/example_03/NUCLEO_STM32F103RBT6)
+
+### example_04 — bindgen: generating Rust bindings from a real C library
+
+This example uses *bindgen* to generate Rust FFI bindings automatically from a real third-party C library — [zserge/jsmn](https://github.com/zserge/jsmn) (MIT licensed), a minimal, dependency-free JSON tokenizer that parses into a caller-supplied, fixed-size token array with no dynamic allocation. `build.rs` runs bindgen against a `wrapper.h` entry point, allowlisting only the symbols needed and passing the target triple explicitly so libclang parses the headers with the firmware's type sizes, not the host's. Building this example surfaced a genuine instance of the enum-sizing hazard from §10.2.4: `arm-none-eabi-gcc` applies `-fshort-enums` by default on this target, shrinking `jsmntype_t` to one byte, while libclang does not assume that on its own — `build.rs` passes `-fshort-enums` to both the C compilation and the bindgen invocation so the two stay in lock-step. The firmware parses a small embedded JSON string and logs each token's type and boundaries via `defmt`.
+
+**Available on:**
+[Blue Pill (STM32F103C8T6)](CH10/example_04/bluepill_STM32F103C8T6) ·
+[NUCLEO-F103RB (STM32F103RBT6)](CH10/example_04/NUCLEO_STM32F103RBT6)
+
+### example_05 — cbindgen: generating a C header from Rust
+
+This example uses *cbindgen* to generate a C header automatically from Rust source — the inverse direction of example_04. The Rust library exposes a self-contained, side-effect-free `checksum()` function, the kind of pure logic a migration should move to Rust first, declared `unsafe extern "C" fn` for the same reason as `divide()` in example_02: a null check narrows the failure mode but doesn't prove the data pointer is valid for `len` bytes. `build.rs` regenerates `embedded_rust_lib.h` on every `cargo build`, so the header can never fall out of sync with the exported Rust API. `main.c` reuses example_02's bare-metal harness, checking a normal buffer, an empty buffer, and a null pointer against what the Rust source promises, and blinks the onboard LED steadily if the generated header and the compiled library agree.
+
+**Available on:**
+[Blue Pill (STM32F103C8T6)](CH10/example_05/bluepill_STM32F103C8T6) ·
+[NUCLEO-F103RB (STM32F103RBT6)](CH10/example_05/NUCLEO_STM32F103RBT6)

@@ -1,0 +1,16 @@
+[package]
+name = "embedded_rust_lib"
+version = "0.1.0"
+authors = ["David Cabanis <davidcabanis@gmail.com>"]
+edition = "2024"
+
+[lib]
+crate-type = ["staticlib"]
+
+[profile.release]
+opt-level = "s"
+
+[dependencies]
+
+[build-dependencies]
+cbindgen = "0.29"

@@ -1,0 +1,3 @@
+language = "C"
+include_guard = "EMBEDDED_RUST_LIB_H"
+documentation = false

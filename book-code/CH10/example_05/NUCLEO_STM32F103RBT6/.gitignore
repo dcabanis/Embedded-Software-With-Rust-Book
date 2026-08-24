@@ -1,0 +1,4 @@
+/rust_lib/target
+/rust_lib/embedded_rust_lib.h
+/app.elf
+/app.bin
