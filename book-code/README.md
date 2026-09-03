@@ -1,26 +1,33 @@
 # Code Examples
 
-Companion source code organised by chapter.
-Each example lives inside a board-specific sub-folder — clone the repo and build only the variant that matches your hardware.
+Companion source code organized by chapter.
+Each example lives inside a board-specific sub-folder; clone the repo and build only the variant that matches your hardware.
 
+**PRO Tip:** Hardware boards can be temperamental at times. For one reason or another they stop responding, unwilling to be flashed. If this is something you are experiencing, you can try the following trick:
+
+- Hold the board's *reset* button pressed
+- Execute the terminal command (you can try a few times): st-flash --connect-under-reset erase
+- Whilst the command execute, you can release the reset button and if the silicon gods are with you, that should set the board back into a state where it will allow you to flash it with your new firmware.
+
+  
 ## Contents
 
-- [Chapter 1 — Peripheral Singletons and Interrupts](#chapter-1--peripheral-singletons-and-interrupts)
-- [Chapter 2 — Tooling, Templates, and Simulation](#chapter-2--tooling-templates-and-simulation)
-- [Chapter 3 — Project Structure and the Embedded-Rust Ecosystem](#chapter-3--project-structure-and-the-embedded-rust-ecosystem)
-- [Chapter 4 — Bare-Metal Startup, Linker Scripts, and Interrupt Handling](#chapter-4--bare-metal-startup-linker-scripts-and-interrupt-handling)
-- [Chapter 5 — Hardware Abstraction: From Raw MMIO to HAL](#chapter-5--hardware-abstraction-from-raw-mmio-to-hal)
-- [Chapter 6 — Debugging, Logging, and Profiling](#chapter-6--debugging-logging-and-profiling)
-- [Chapter 7 — Managing Stack and Heap in Resource-Constrained Systems](#chapter-7--managing-stack-and-heap-in-resource-constrained-systems)
-- [Chapter 10 — Rust-C Integration and Migration](#chapter-10--rust-c-integration-and-migration)
+- [Chapter 1 - Peripheral Singletons and Interrupts](#chapter-1---peripheral-singletons-and-interrupts)
+- [Chapter 2 - Tooling, Templates, and Simulation](#chapter-2---tooling-templates-and-simulation)
+- [Chapter 3 - Project Structure and the Embedded-Rust Ecosystem](#chapter-3---project-structure-and-the-embedded-rust-ecosystem)
+- [Chapter 4 - Bare-Metal Startup, Linker Scripts, and Interrupt Handling](#chapter-4---bare-metal-startup-linker-scripts-and-interrupt-handling)
+- [Chapter 5 - Hardware Abstraction: From Raw MMIO to HAL](#chapter-5---hardware-abstraction-from-raw-mmio-to-hal)
+- [Chapter 6 - Debugging, Logging, and Profiling](#chapter-6---debugging-logging-and-profiling)
+- [Chapter 7 - Managing Stack and Heap in Resource-Constrained Systems](#chapter-7---managing-stack-and-heap-in-resource-constrained-systems)
+- [Chapter 10 - Rust-C Integration and Migration](#chapter-10---rust-c-integration-and-migration)
 
 ---
 
-## Chapter 1 — Peripheral Singletons and Interrupts
+## Chapter 1 - Peripheral Singletons and Interrupts
 
-### example_01 — The singleton pattern for peripherals
+### example_01 - The singleton pattern for peripherals
 
-This example configures the SysTick timer for a 1-second periodic interrupt at 8 MHz, and parks the CPU in WFI in the main loop. A `#[exception]`-annotated `SysTick` handler fires on each tick, illustrating how `cortex-m-rt` places exception handlers in the correct vector table slots.
+SysTick fires a 1-second interrupt at 8 MHz while the CPU parks in WFI; shows `cortex-m-rt` placing an exception handler in the vector table.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH01/example_01/bluepill_STM32F103C8T6) ·
@@ -28,90 +35,89 @@ This example configures the SysTick timer for a 1-second periodic interrupt at 8
 
 ---
 
-## Chapter 2 — Tooling, Templates, and Simulation
+## Chapter 2 - Tooling, Templates, and Simulation
 
-### example_01 — Using a project template with cargo generate
+### example_01 - Using a project template with cargo generate
 
-This is the minimal "hello world" template for an STM32F103 project. The firmware prints `"Fly like a bird!"` once via the `hprintln!()` semihosting macro and then loops forever. No peripherals are configured; all I/O is handled by the attached debugger on the host side. **Without an active debugger the firmware will hang at the semihosting call.**
+The minimal "hello world" template. Prints once via semihosting, then loops forever. **Without an active debugger the firmware will hang at the semihosting call.**
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH02/example_01/bluepill_STM32F103C8T6) ·
 [PICSimLab (STM32F103C8T6)](CH02/example_01/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH02/example_01/NUCLEO_STM32F103RBT6)
 
-### example_02 — Hello world with Knurling
+### example_02 - Hello world with Knurling
 
-This is a Knurling-based project template that demonstrates `defmt` structured logging over RTT. Multiple binary targets are provided: `hello` prints a greeting, `levels` shows all defmt log levels controlled by the `DEFMT_LOG` environment variable, `format` demonstrates the `Format` derive macro for custom struct formatting, `bitfield` shows bitfield extraction syntax for reading register fields, `panic` triggers a defmt panic, and `overflow` exhausts the stack with a recursive Ackermann function to demonstrate stack-overflow detection.
+A Knurling-based template for `defmt` structured logging over RTT, with separate binaries covering greetings, log levels, custom formatting, bitfields, panics, and stack overflow.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH02/example_02/knurling_bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH02/example_02/knurling_NUCLEO_STM32F103RBT6)
 
-### example_03 — Using QEMU for running examples
+### example_03 - Using QEMU for running examples
 
-This example runs on QEMU instead of physical hardware, targeting the STM32F100 (Cortex-M3) chip model. The firmware prints `"Fly like a bird!"` via semihosting, then enters an infinite loop. It demonstrates how to validate embedded Rust code on a host machine without a development board, using QEMU's ARM system emulation as the execution environment.
+Runs on QEMU (STM32F100, Cortex-M3) instead of physical hardware; a way to validate embedded Rust without a board on hand.
 
 **Available on:**
 [QEMU STM32F100](CH02/example_03/QEMU_STM32F100)
 
-### example_04 — LED blink in PICSimLab simulation
+### example_04 - LED blink in PICSimLab simulation
 
-This example targets the PICSimLab simulator rather than physical hardware. The firmware configures the STM32F103C8T6 system clock to 72 MHz via the HSE PLL, initialises GPIO PC13 as a push-pull output, and toggles the LED every 500 ms using a SysTick-based delay. It is intended to be run inside PICSimLab's Blue Pill board workspace, demonstrating how to develop and test firmware without a physical device.
+LED blink targeting the PICSimLab simulator: 72 MHz clock, PC13 toggled every 500 ms via SysTick, no physical device needed.
 
 **Available on:**
 [PICSimLab (STM32F103C8T6)](CH02/example_04/PICSimLab_STM32F103C8T6)
 
 ---
 
-## Chapter 3 — Project Structure and the Embedded-Rust Ecosystem
+## Chapter 3 - Project Structure and the Embedded-Rust Ecosystem
 
-### example_01 — Typical embedded Rust project layout
+### example_01 - Typical embedded Rust project layout
 
-This is the chapter-3 starting-point project. The firmware takes STM32 device peripherals via `stm32f1xx_hal::pac::Peripherals::take()` and prints `"Hello, world!"` through semihosting. The purpose is to show the canonical embedded-Rust project structure, `#![no_std]` / `#![no_main]`, runtime entry point, peripheral singleton, and a HAL import, before adding any real hardware interaction. **A debugger must be attached to see the semihosting output.**
+The chapter-3 starting point: canonical `#![no_std]` / `#![no_main]` structure, peripheral singleton, and a HAL import. **A debugger must be attached to see the semihosting output.**
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH03/example_01/bluepill_STM32F103C8T6) ·
 [PICSimLab (STM32F103C8T6)](CH03/example_01/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH03/example_01/NUCLEO_STM32F103RBT6)
 
-### example_02 — Conditional compile with features
+### example_02 - Conditional compile with features
 
-This example demonstrates compile-time feature selection for the panic handler. Two mutually exclusive features are defined in `Cargo.toml`: the default `panic-halt` feature links `panic-halt`, and the `semihosting` feature links `panic-semihosting` plus `cortex-m-semihosting`. A `#[cfg]` compile-time check enforces that exactly one feature is active. The firmware then triggers a panic
-so the chosen strategy can be observed in practice.
+Compile-time feature selection for the panic handler, switching between `panic-halt` and `panic-semihosting` via `Cargo.toml`.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH03/example_02/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH03/example_02/NUCLEO_STM32F103RBT6)
 
-### example_03 — Using cortex-m crates together
+### example_03 - Using cortex-m crates together
 
-This example uses both the `cortex-m` and `cortex-m-rt` crates together to configure SysTick and register its exception handler. The firmware programs SysTick for a 1-second reload interval at 8 MHz.
+`cortex-m` and `cortex-m-rt` together to configure and register a SysTick exception handler.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH03/example_03/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH03/example_03/NUCLEO_STM32F103RBT6)
 
-### example_04 — embedded-hal used with the LSM303AGR accelerometer
+### example_04 - embedded-hal used with the LSM303AGR accelerometer
 
-This example demonstrates platform-agnostic hardware driver usage via the `embedded-hal` I2C trait. The firmware configures I2C1, initialises an LSM303AGR accelerometer in Normal mode at 50 Hz ODR using the `lsm303agr` driver crate, and toggles the onboard LED on PC13 whenever the X-axis acceleration exceeds a threshold. It shows that the same high-level driver works across STM32 families because it depends only on the `embedded-hal` I2C abstraction.
+Reads an LSM303AGR accelerometer over I2C via `embedded-hal`; the LED toggles when X-axis acceleration crosses a threshold.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH03/example_04/bluepill_STM32F103C8T6) ·
 [STM32F3DISCOVERY (STM32F303)](CH03/example_04/Discovery_STM32F303) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH03/example_04/NUCLEO_STM32F103RBT6)
 
-### example_05 — Platform-agnostic driver with embedded-hal
+### example_05 - Platform-agnostic driver with embedded-hal
 
-This example demonstrates writing MCU-agnostic driver logic using the `embedded-hal` `OutputPin` trait. A generic `blink_led()` function accepts any `OutputPin` and toggles it in a loop. Because the Blue Pill's onboard LED on PC13 is active-low, an `ActiveLow` new-type wrapper is introduced to invert the pin polarity, letting the generic function operate correctly without knowing about board-specific wiring.
+A generic `blink_led()` built on the `embedded-hal` `OutputPin` trait, with an `ActiveLow` wrapper handling the Blue Pill's inverted LED polarity.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH03/example_05/bluepill_STM32F103C8T6) ·
 [PICSimLab (STM32F103C8T6)](CH03/example_05/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH03/example_05/NUCLEO_STM32F103RBT6)
 
-### example_06 — UART echo on USART1
+### example_06 - UART echo on USART1
 
-This example configures USART1 at 115 200 baud, 8N1 and implements a byte echo loop using the `nb::block!()` macro for blocking I/O. Bytes received on PA10 (RX) are immediately re-transmitted on PA9 (TX). A USB-to-UART adapter and a terminal emulator such as `picocom` are required on the host side to send and see the echoed characters.
+Byte echo loop on USART1 at 115,200 baud. You'll need a USB-to-UART adapter and a terminal emulator on the host side.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH03/example_06/bluepill_STM32F103C8T6) ·
@@ -119,51 +125,47 @@ This example configures USART1 at 115 200 baud, 8N1 and implements a byte echo l
 
 ---
 
-## Chapter 4 — Bare-Metal Startup, Linker Scripts, and Interrupt Handling
+## Chapter 4 - Bare-Metal Startup, Linker Scripts, and Interrupt Handling
 
-### example_01 — Minimal linker script and startup
+### example_01 - Minimal linker script and startup
 
-This example implements the entire MCU startup from scratch, without the `cortex-m-rt` crate. It manually places a reset vector in the `.vector_table` linker section, initialises the `.data` and `.bss` segments in inline assembly, then configures GPIO and SysTick by writing directly to memory-mapped I/O addresses via raw pointers. The onboard LED on PC13 (active-low) toggles once per SysTick tick, revealing what the runtime crate does automatically under the hood.
+MCU startup built from scratch, no `cortex-m-rt`: a hand-placed reset vector, manual `.data`/`.bss` init, and raw-pointer GPIO/SysTick setup.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH04/example_01/bluepill_STM32F103C8T6) ·
 [PICSimLab (STM32F103C8T6)](CH04/example_01/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH04/example_01/NUCLEO_STM32F103RBT6)
 
-### example_02 — Manually creating a vector table and exception handlers
+### example_02 - Manually creating a vector table and exception handlers
 
-This example extends the bare-metal startup from example_01 by manually constructing the full Cortex-M exception vector table in a `startup` module.
-Handlers for NMI, HardFault, MemManage, BusFault, UsageFault, SVCall, and PendSV are provided; each prints a diagnostic message via semihosting before halting. The example shows what `cortex-m-rt` generates automatically, making the underlying mechanism visible. **A debugger must be attached to see the semihosting output.**
+A hand-built Cortex-M exception vector table with handlers for NMI, HardFault, and friends; shows what `cortex-m-rt` normally does for you. **A debugger must be attached to see the semihosting output.**
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH04/example_02/bluepill_STM32F103C8T6) ·
 [PICSimLab (STM32F103C8T6)](CH04/example_02/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH04/example_02/NUCLEO_STM32F103RBT6)
 
-### example_03 — Simplifying exception and interrupt handling with a run-time crate
+### example_03 - Simplifying exception and interrupt handling with a run-time crate
 
-This example replaces the manual vector table from example_02 with the `#[exception]` macro provided by `cortex-m-rt`. The SysTick timer fires every second and flips an `AtomicBool` flag. The main loop polls the flag in WFI sleep and prints an alternating message via semihosting, demonstrating the idiomatic `cortex-m-rt` approach to safe exception handler registration. **A debugger must be attached to see the semihosting output.**
+The manual vector table from example_02, replaced by the `#[exception]` macro; the idiomatic `cortex-m-rt` way to register a handler. **A debugger must be attached to see the semihosting output.**
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH04/example_03/bluepill_STM32F103C8T6) ·
 [PICSimLab (STM32F103C8T6)](CH04/example_03/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH04/example_03/NUCLEO_STM32F103RBT6)
 
-### example_04 — Safe shared access using `cortex_m::interrupt::Mutex`
+### example_04 - Safe shared access using `cortex_m::interrupt::Mutex`
 
-This example demonstrates how to safely share a variable between the main execution context and an interrupt handler using `cortex_m::interrupt::Mutex<Cell<u32>>`. A monotonic seconds counter is stored in a `static` and incremented by the `SysTick` handler every second. All accesses go through `interrupt::free()` critical sections, preventing data races on Cortex-M. The current count is printed via semihosting on each tick.
-**A debugger must be attached to see the semihosting output.**
+A seconds counter shared between the main loop and a `SysTick` handler via `cortex_m::interrupt::Mutex<Cell<u32>>`, with all access inside `interrupt::free()`. **A debugger must be attached to see the semihosting output.**
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH04/example_04/bluepill_STM32F103C8T6) ·
 [PICSimLab (STM32F103C8T6)](CH04/example_04/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH04/example_04/NUCLEO_STM32F103RBT6)
 
-### example_05 — Sharing peripherals with mutex and interior mutability
+### example_05 - Sharing peripherals with mutex and interior mutability
 
-This example extends the Mutex pattern to a full peripheral by moving the `SYST` timer into a `static Mutex<RefCell<Option<SYST>>>` after configuration. Both the main loop and the `SysTick` exception handler borrow it inside `interrupt::free()` critical sections. The handler reads the current value register (CVR) and prints it via semihosting; the main loop detects 30-second
-intervals and prints elapsed time.
-**A debugger must be attached to see the semihosting output.**
+Extends the Mutex pattern to a whole peripheral: the `SYST` timer lives in a `static Mutex<RefCell<Option<SYST>>>`, borrowed by both the main loop and the handler. **A debugger must be attached to see the semihosting output.**
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH04/example_05/bluepill_STM32F103C8T6) ·
@@ -172,50 +174,46 @@ intervals and prints elapsed time.
 
 ---
 
-## Chapter 5 — Hardware Abstraction: From Raw MMIO to HAL
+## Chapter 5 - Hardware Abstraction: From Raw MMIO to HAL
 
-### example_01 — Raw-pointer MMIO LED blink
+### example_01 - Raw-pointer MMIO LED blink
 
-This is the chapter-5 baseline: a bare-metal LED blinker written entirely with raw pointer MMIO, using no HAL or PAC. The firmware initialises data and BSS sections, enables GPIOC via RCC, and configures PC13 as a push-pull output.
-SysTick is polled (not interrupt-driven) to produce a 1-second toggle period.
-The goal is to establish a reference point before showing how PAC and HAL crates simplify the same task in the subsequent examples.
+The chapter-5 baseline: an LED blinker written entirely with raw pointer MMIO, no HAL or PAC in sight.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH05/example_01/bluepill_STM32F103C8T6) ·
 [PICSimLab (STM32F103C8T6)](CH05/example_01/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH05/example_01/NUCLEO_STM32F103RBT6)
 
-### example_02 — Type-safe MMIO via PAC
+### example_02 - Type-safe MMIO via PAC
 
-This example replaces the raw `*mut u32` writes from example_01 with the type-safe register API of the `stm32f1` Peripheral Access Crate (PAC). GPIO and RCC are configured through the PAC's `modify()` and `write()` closures, eliminating raw pointer casts while producing the same result: PC13 (active-low) toggled every second via SysTick.
+The same blink, this time through the `stm32f1` PAC's type-safe `modify()` / `write()` register API instead of raw pointers.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH05/example_02/bluepill_STM32F103C8T6) ·
 [PICSimLab (STM32F103C8T6)](CH05/example_02/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH05/example_02/NUCLEO_STM32F103RBT6)
 
-### example_03 — 1 Hz LED blink using stm32f1xx-hal
+### example_03 - 1 Hz LED blink using stm32f1xx-hal
 
-This example demonstrates the top HAL layer of the embedded-Rust stack. The `stm32f1xx-hal` crate configures the RCC, takes ownership of the GPIOC peripheral, and returns a typed push-pull output pin for PC13 (active-low). A HAL `Delay` provider built from SysTick abstracts the timing. The result is a concise, readable 1 Hz blink loop that hides all register-level detail, showing the contrast with example_01 (raw pointers) and example_02 (PAC).
+The same blink again, now through `stm32f1xx-hal`; register-level detail disappears behind a typed pin and a HAL `Delay`.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH05/example_03/bluepill_STM32F103C8T6) ·
 [PICSimLab (STM32F103C8T6)](CH05/example_03/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH05/example_03/NUCLEO_STM32F103RBT6)
 
-### example_04 — SSD1306 OLED display over I2C
+### example_04 - SSD1306 OLED display over I2C
 
-This example drives an SSD1306 OLED display using the `ssd1306` platform-agnostic driver crate over I2C1. The firmware probes the display, initialises it in terminal mode, and writes `"SSD1306 found!"` and `"Hello world!"` to the screen.
-I2C1 is configured on PB6 (SCL) and PB7 (SDA). The example also introduces a custom `PrintStr` trait to work around a defect in the `ssd1306` crate's `fmt::Write` implementation, demonstrating how to patch third-party driver limitations without forking.
+Drives an SSD1306 OLED over I2C1 using the `ssd1306` crate, plus a small `PrintStr` trait that patches around one of its quirks.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH05/example_04/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH05/example_04/NUCLEO_STM32F103RBT6)
 
-### example_05 — Inline and global assembly for MMIO and timing
+### example_05 - Inline and global assembly for MMIO and timing
 
-This example demonstrates three ways to embed assembly in embedded-Rust firmware.
-A `global_asm!()` block defines a counted delay loop. `core::arch::asm!()` is used inline to manipulate `PRIMASK` (disabling interrupts) and to toggle the PC13 LED by writing directly to the GPIOC BSRR register. `cortex_m::asm::nop()` provides short NOP-based busy-wait delays. The example shows how to mix Rust and assembly for performance-critical or hardware-specific code paths while still leveraging the HAL for initial GPIO configuration.
+Three ways to mix assembly into Rust: `global_asm!()`, inline `core::arch::asm!()`, and `cortex_m::asm::nop()` busy-waits.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH05/example_05/bluepill_STM32F103C8T6) ·
@@ -224,79 +222,77 @@ A `global_asm!()` block defines a counted delay loop. `core::arch::asm!()` is us
 
 ---
 
-## Chapter 6 — Debugging, Logging, and Profiling
+## Chapter 6 - Debugging, Logging, and Profiling
 
-### example_01 — Semihosting with `hprintln!()`
+### example_01 - Semihosting with `hprintln!()`
 
-This example demonstrates semihosting output on the STM32F103. The firmware prints `"Hello from semihosting"` once via the `hprintln!()` macro from the `cortex-m-semihosting` crate, then spins in an infinite loop. No peripherals are configured; all I/O is handled by the debugger on the host side.
+Prints once via `hprintln!()`, then spins. No peripherals configured; the debugger handles I/O on the host side.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH06/example_01/bluepill_STM32F103C8T6) ·
 [PICSimLab (STM32F103C8T6)](CH06/example_01/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH06/example_01/NUCLEO_STM32F103RBT6)
 
-### example_02 — UART logging with `writeln!()`
+### example_02 - UART logging with `writeln!()`
 
-This example demonstrates standalone UART output. The firmware configures USART1 on PA9 (TX) and PA10 (RX) at 115 200 baud, writes `"UART log message"` once via the `writeln!()` macro, then spins in an infinite loop. No debugger is required after flashing; the message appears on any serial terminal connected to the UART pins.
+Writes a message over USART1 via `writeln!()`. No debugger needed; read it on any serial terminal.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH06/example_02/bluepill_STM32F103C8T6) ·
 [PICSimLab (STM32F103C8T6)](CH06/example_02/PICSimLab_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH06/example_02/NUCLEO_STM32F103RBT6)
 
-### example_03 — ITM logging with `iprintln!()`
+### example_03 - ITM logging with `iprintln!()`
 
-This example demonstrates ITM (Instrumentation Trace Macrocell) output. The firmware writes `"ITM log message"` to ITM stimulus port 0 via the `iprintln!()` macro from the `cortex-m` crate, then spins in an infinite loop.
+Writes a message to an ITM stimulus port via `iprintln!()` from the `cortex-m` crate.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH06/example_03/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH06/example_03/NUCLEO_STM32F103RBT6)
 
-### example_04 — RTT logging with `rtt-target`
+### example_04 - RTT logging with `rtt-target`
 
-This example demonstrates Real-Time Transfer (RTT) output. The firmware initialises an RTT channel with `rtt_init_print!()`, writes `"RTT log message"` via `rprintln!()`, then spins in an infinite loop. RTT works by placing a control block in RAM that the debug probe reads in the background over SWD while the firmware runs — no extra hardware pins are required beyond the standard SWD connection (SWDIO, SWCLK, GND) already used for flashing.
+Writes a message over RTT via `rprintln!()`; no extra hardware pins beyond the standard SWD connection.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH06/example_04/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH06/example_04/NUCLEO_STM32F103RBT6)
 
-### example_05 — Structured logging with `defmt`
+### example_05 - Structured logging with `defmt`
 
-This example demonstrates `defmt` output. The firmware logs one message at the `INFO` level via `defmt::info!()` once per second, repeating indefinitely.
-`defmt` is a binary logging framework: instead of formatting strings on the device, it emits a compact token that references a format string stored in the ELF binary. The host tool reconstructs the message by reading both the token stream and the ELF symbol table, making each log call cheaper and keeping the binary smaller than a `core::fmt`-based approach.
+Logs once a second via `defmt::info!()`, the token-based binary logging framework that keeps firmware small.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH06/example_05/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH06/example_05/NUCLEO_STM32F103RBT6)
 
-### example_06 — Configurable fault handlers and HardFault diagnosis
+### example_06 - Configurable fault handlers and HardFault diagnosis
 
-This example demonstrates three complementary fault-handling techniques. Configurable fault handlers (`MemoryManagement`, `BusFault`, `UsageFault`) each route to their own `#[exception]` handler, which calls `panic!()` so the panic handler can log the fault via RTT. A custom `#panic_handler]` routes panic
-messages through RTT so they appear in the probe-rs console. A HardFault handler with full register decode prints the CPU register snapshot from `ExceptionFrame`, then reads and decodes HFSR and CFSR (including the UFSR, BFSR, and MMFSR sub-fields), and prints the faulting address from MMFAR or BFAR when the  address-valid bits are set. A deliberate fault is injected on every boot to drive the demonstration.
+Configurable fault handlers plus a HardFault handler that decodes HFSR/CFSR and prints the faulting address, all logged over RTT; a fault is injected on every boot to demonstrate it.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH06/example_06/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH06/example_06/NUCLEO_STM32F103RBT6)
 
-### example_07 — GDB + OpenOCD interactive debugging
+### example_07 - GDB + OpenOCD interactive debugging
 
-This example demonstrates the full GDB + OpenOCD debugging workflow, including an automated `.gdbinit` that connects to the target, flashes the binary, and stops at `main` ready for interactive use.
+The full GDB + OpenOCD workflow, with an automated `.gdbinit` that connects, flashes, and stops at `main`.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH06/example_07/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH06/example_07/NUCLEO_STM32F103RBT6)
 
-### example_08 — DWT cycle-counter profiling
+### example_08 - DWT cycle-counter profiling
 
-This example demonstrates cycle-accurate timing measurement using the Cortex-M Data Watchpoint and Trace (DWT) unit. The firmware enables the DWT cycle counter, times two `nop`-loop tasks of different lengths, and reports the elapsed cycles over RTT.
+Cycle-accurate timing via the Cortex-M DWT unit, comparing two `nop`-loop tasks of different lengths over RTT.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH06/example_08/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH06/example_08/NUCLEO_STM32F103RBT6)
 
-### example_09 — SysTick-based cycle measurement
+### example_09 - SysTick-based cycle measurement
 
-This example demonstrates SysTick-based timing as a fallback for Cortex-M cores that lack a DWT cycle counter (Cortex-M0 / M0+). The firmware configures SysTick as a free-running down-counter, measures `do_work()` by reading the counter before and after, and reports the elapsed cycles over RTT. The Blue Pill is a Cortex-M3 and does have DWT, so the DWT approach from example_08 is preferable on this hardware; this example demonstrates the SysTick technique that would be used on Cortex-M0 / M0+ / M23 parts, and the same code runs unchanged on a Cortex-M3.
+SysTick-based timing as a DWT fallback for cores without a cycle counter (Cortex-M0/M0+); runs unchanged on the Blue Pill's Cortex-M3 too.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH06/example_09/bluepill_STM32F103C8T6) ·
@@ -304,126 +300,118 @@ This example demonstrates SysTick-based timing as a fallback for Cortex-M cores 
 
 ---
 
-## Chapter 7 — Managing Stack and Heap in Resource-Constrained Systems
+## Chapter 7 - Managing Stack and Heap in Resource-Constrained Systems
 
-### example_01 — Dynamic allocation with `embedded-alloc` (LLFF heap)
+### example_01 - Dynamic allocation with `embedded-alloc` (LLFF heap)
 
-This example enables the `alloc` crate in a `no_std` firmware by installing the `embedded-alloc` LLFF (Last-Level First-Fit) heap as the global allocator. A 4 KiB backing store is carved out of RAM using a `static mut [MaybeUninit<u8>]` array and handed to the allocator before any allocation is attempted. The firmware then exercises `Box::new` (allocates a `u32` on the heap, logs its value, and drops it back) and `Vec::push` (builds a three-element vector), both logged via `defmt`. The example shows the minimum wiring needed to bring the full `alloc` API online in a bare-metal Rust project.
+Installs `embedded-alloc`'s LLFF heap as the global allocator over a 4 KiB static buffer, then exercises `Box::new` and `Vec::push`; the minimum wiring to bring `alloc` online in `no_std`.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH07/example_01/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH07/example_01/NUCLEO_STM32F103RBT6)
 
-### example_02 — Buddy-system allocator with `buddy_system_allocator`
+### example_02 - Buddy-system allocator with `buddy_system_allocator`
 
-This example replaces the LLFF heap from example_01 with a buddy-system allocator from the `buddy_system_allocator` crate. The allocator is parameterised by an ORDER constant (32) that sets the maximum block size to 2^32 bytes; allocations are rounded up to the nearest power of two in exchange for bounded worst-case timing and predictable fragmentation behaviour. The same
-`Box::new` and `Vec::push` workload from example_01 is repeated so the two allocator strategies can be compared directly.
+The same `Box`/`Vec` workload from example_01, this time on a buddy-system allocator, for bounded worst-case timing at the cost of some rounding up.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH07/example_02/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH07/example_02/NUCLEO_STM32F103RBT6)
 
-### example_03 — Heap-allocated event log with `Vec<String>`
+### example_03 - Heap-allocated event log with `Vec<String>`
 
-This example demonstrates a practical use of the heap: accumulating a runtime event log as a `Vec<String>`. A `record_event()` helper formats each entry with `format!()` and appends it to a heap-allocated vector of heap-allocated strings. 
-
-Three events are logged (UART, I2C, GPIO), and the completed log is printed via `defmt`. The example illustrates that idiomatic heap usage in `no_std` firmware looks exactly like standard Rust once the global allocator is installed.
+Builds a runtime event log as a `Vec<String>`, logged via `defmt`; idiomatic `no_std` heap usage once the allocator is installed.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH07/example_03/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH07/example_03/NUCLEO_STM32F103RBT6)
 
-### example_04 — Fixed-capacity collections with `heapless`
+### example_04 - Fixed-capacity collections with `heapless`
 
-This example demonstrates heap-free, fixed-capacity data structures from the `heapless` crate as a drop-in alternative to `Vec` and `String`. A `Vec<u8,LINE_LEN>` accumulates incoming bytes and a `String<RESP_LEN>` holds the response — both sized entirely at compile time with no allocator required. A `feed_byte()` function processes a simulated UART byte stream: it dispatches `HELLO` and `VERSION` commands to `handle_command()`, returns `ERR unknown` for unrecognised input, and detects buffer overflow when a line exceeds `LINE_LEN` bytes without a newline. All responses are logged via `defmt`.
+A UART byte-stream parser built entirely on `heapless::Vec` and `String`; no allocator, fixed capacity known at compile time.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH07/example_04/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH07/example_04/NUCLEO_STM32F103RBT6)
 
-### example_05 — Stack-only collections with `arrayvec`
+### example_05 - Stack-only collections with `arrayvec`
 
-This example demonstrates the `arrayvec` crate's `ArrayVec<T, N>` and `ArrayString<N>` types, which store their elements entirely on the stack with no heap involvement. Both panicking and fallible APIs are shown: `push` / `push_str` panic on overflow (suitable for code paths that are statically known to be in-bounds), while `try_push` / `try_push_str` return a `Result` for input-driven paths where overflow is a real possibility. A `try_push_str` that would exceed the 32-byte `ArrayString` capacity is demonstrated, showing that the string is left unchanged after a failed attempt.
+`ArrayVec` and `ArrayString` from the `arrayvec` crate, stack-only with no heap involved; both the panicking and the fallible `try_push` APIs are shown.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH07/example_05/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH07/example_05/NUCLEO_STM32F103RBT6)
 
-### example_06 — Hybrid stack-or-heap collections with `tinyvec` and `smallvec`
+### example_06 - Hybrid stack-or-heap collections with `tinyvec` and `smallvec`
 
-This example demonstrates two hybrid collection crates that store a fixed number of elements inline (on the stack) and spill to the heap only when that capacity is exceeded. `TinyVec<[T; N]>` requires `T: Default` and is fully safe;
-`SmallVec<[T; N]>` uses `unsafe` internally to remove the `Default` requirement.
-Both are initialised with 8 inline elements (no heap), and a ninth push triggers the spill in each case. The `is_heap()` / `spilled()` methods are logged before and after the spill to make the transition visible. A global `embedded-alloc` heap is installed to service the spill allocations.
+`TinyVec` and `SmallVec` compared side by side: both start inline on the stack and spill to the heap once capacity runs out.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH07/example_06/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH07/example_06/NUCLEO_STM32F103RBT6)
 
-### example_07 — Stack-overflow detection with `flip-link`
+### example_07 - Stack-overflow detection with `flip-link`
 
-This example demonstrates the `flip-link` linker wrapper, which rearranges the RAM layout so the stack occupies the bottom of RAM rather than the top. In the default layout a stack overflow silently overwrites `.data` and `.bss`; with `flip-link` the overflow hits unmapped memory first, generating a deterministic bus fault. The firmware starts infinite recursion (512 bytes per frame via a
-`MaybeUninit` buffer and a volatile write), logging the current depth via `defmt` on every frame. A `static mut DEVICE_ID` is placed in `.data` to make the corruption contrast visible: without `flip-link` the RTT stream cuts off early and `DEVICE_ID` is overwritten; with `flip-link` the log continues cleanly until the bus fault halts execution at a deterministic address.
+The `flip-link` linker wrapper flips the RAM layout so a stack overflow hits unmapped memory and faults cleanly, instead of silently corrupting `.data`.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH07/example_07/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH07/example_07/NUCLEO_STM32F103RBT6)
 
-### example_08 — Stack-usage measurement with canary painting
+### example_08 - Stack-usage measurement with canary painting
 
-This example demonstrates a manual stack-painting technique for measuring peak stack usage without an RTOS or a debugger. `paint_stack()` fills free RAM from `_stack_bottom` up to just below the current stack pointer with a 0xDEADBEEF canary pattern. After calling `work_shallow()` (256-byte frame) and `work_deep()` (512-byte frame that calls `work_shallow()`), `unused_stack_words()` scans from the bottom upward and counts surviving canary words. The difference gives the peak stack consumption of each call chain. Output is sent via semihosting (`hprintln!`) so no RTT ring buffer occupies the unpainted region and skews the measurement. `#[inline(never)]` is applied to both work functions to prevent the optimiser from merging their stack frames.
+Measures peak stack usage without an RTOS or debugger by painting free RAM with a canary pattern and counting what survives.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH07/example_08/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH07/example_08/NUCLEO_STM32F103RBT6)
 
-### example_09 — MPU stack guard on the STM32F3DISCOVERY
+### example_09 - MPU stack guard on the STM32F3DISCOVERY
 
-This example configures the Cortex-M4 Memory Protection Unit (MPU) as a hardware stack guard on the STM32F303VCT6. A 32-byte no-access execute-never region (MPU region 0) is installed at `_stack_bottom`, the lowest valid stack address defined in `memory.x`. Any read, write, or instruction fetch within that region triggers a MemManage fault (or HardFault if MemManage is not separately
-enabled), converting a silent stack overflow into a deterministic, debugger-visible fault. The MPU is enabled with `PRIVDEFENA` so all other memory regions retain their default access permissions. DSB and ISB barriers ensure the configuration takes effect before the next memory access. The STM32F3DISCOVERY is used here because its Cortex-M4 core includes the MPU; the Blue Pill's
-Cortex-M3 also has an MPU but this example targets the Discovery board.
+The Cortex-M4 MPU set up as a hardware stack guard, turning a silent overflow into a deterministic, debugger-visible fault.
 
 **Available on:**
 [STM32F3DISCOVERY (STM32F303VCT6)](CH07/example_09/stm32f3discovery_STM32F303VCT6)
 
 ---
 
-## Chapter 10 — Rust-C Integration and Migration
+## Chapter 10 - Rust-C Integration and Migration
 
-### example_01 — Calling C from Rust: FFI basics and safe wrappers
+### example_01 - Calling C from Rust: FFI basics and safe wrappers
 
-This example demonstrates calling hand-written C code from Rust. A small C library exposes a scalar `add()` function and a `void update_status(DeviceStatus*, float)` function that mutates a struct through a pointer. On the Rust side, the C declarations are quarantined inside a private `ffi` module; `DeviceStatus` is `#[repr(C)]`, matching the C header's layout exactly, with a `const _: () = assert!(...)` pinning the struct size at compile time. `DeviceState` is deliberately *not* a plain `#[repr(u8)] enum`: since C could in principle write any byte into that field, it's a `#[repr(transparent)]` wrapper around a `u8`, and only `DeviceState::checked()` turns a validated byte into a real, exhaustively-matchable `CheckedDeviceState` enum. `safe_add()` and `safe_update_status()` wrap the `unsafe extern "C"` calls behind ordinary safe functions. The C file is compiled and linked automatically by `build.rs` using the `cc` crate — no manual `#[link(...)]` attribute or prebuilt `.a` file is needed.
+Calls hand-written C code from Rust, wrapping the `unsafe extern "C"` calls behind ordinary safe functions; `build.rs` compiles and links the C file automatically.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH10/example_01/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_01/NUCLEO_STM32F103RBT6)
 
-### example_02 — Calling Rust from C: a `no_std` static library
+### example_02 - Calling Rust from C: a `no_std` static library
 
-This example inverts the usual project shape: a plain C application owns `main()`, a hand-written Cortex-M3 vector table and `Reset_Handler` (`startup.s`), and the linker script, and links against a Rust `no_std` static library built separately. The Rust library exposes `square()` and an integer-error-code `divide()` (`0` success, `-1` divide by zero or overflow, `-2` null output pointer), declared `unsafe extern "C" fn` since a null check alone doesn't prove the output pointer is valid for a write; `a.checked_div(b)` catches both division by zero and `i32::MIN / -1`, which panics unconditionally in Rust regardless of build profile. A `Makefile` reproduces the book's exact two-step build: `cargo build` compiles the Rust static library, then `arm-none-eabi-gcc` links `main.c` + `startup.s` against it. `main.c` checks every result, including the overflow case, and blinks the onboard LED steadily if the two sides agree on the ABI, or latches it on solid if they don't.
+Flips the usual shape: a plain C application owns `main()` and the vector table, linking against a Rust `no_std` static library built separately.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH10/example_02/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_02/NUCLEO_STM32F103RBT6)
 
-### example_03 — Advanced FFI: arrays, C strings, and stateful callbacks
+### example_03 - Advanced FFI: arrays, C strings, and stateful callbacks
 
-This example covers the "hard cases" of FFI beyond plain scalars and structs: `sum_array()` passes a Rust slice as a pointer + length pair; `c_string_len()` takes a `&CStr` (built from a `c"..."` literal) rather than `&str`, so the type system rules out passing an unterminated Rust string; and `register_callback_ctx()` / `trigger_callback_ctx()` implement the two-step, context-carrying callback pattern where C stores an opaque `void *ctx` alongside a function pointer and hands it back unchanged on every call. The Rust side's `count_events()` is the *trampoline*: an `unsafe extern "C" fn` that casts the incoming `void *ctx` back into `&AtomicU32` and increments it — marked `unsafe` because nothing in its signature proves that pointer is still valid — driven once a second by a polled SysTick.
+The harder FFI cases: passing slices as pointer + length, `&CStr` instead of `&str`, and a context-carrying C callback pattern.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH10/example_03/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_03/NUCLEO_STM32F103RBT6)
 
-### example_04 — bindgen: generating Rust bindings from a real C library
+### example_04 - bindgen: generating Rust bindings from a real C library
 
-This example uses *bindgen* to generate Rust FFI bindings automatically from a real third-party C library — [zserge/jsmn](https://github.com/zserge/jsmn) (MIT licensed), a minimal, dependency-free JSON tokenizer that parses into a caller-supplied, fixed-size token array with no dynamic allocation. `build.rs` runs bindgen against a `wrapper.h` entry point, allowlisting only the symbols needed and passing the target triple explicitly so libclang parses the headers with the firmware's type sizes, not the host's. Building this example surfaced a genuine instance of the enum-sizing hazard from §10.2.4: `arm-none-eabi-gcc` applies `-fshort-enums` by default on this target, shrinking `jsmntype_t` to one byte, while libclang does not assume that on its own — `build.rs` passes `-fshort-enums` to both the C compilation and the bindgen invocation so the two stay in lock-step. The firmware parses a small embedded JSON string and logs each token's type and boundaries via `defmt`.
+Uses *bindgen* to generate Rust FFI bindings from a real third-party C library ([zserge/jsmn](https://github.com/zserge/jsmn)), including a fix for an enum-sizing mismatch between `arm-none-eabi-gcc` and libclang.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH10/example_04/bluepill_STM32F103C8T6) ·
 [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_04/NUCLEO_STM32F103RBT6)
 
-### example_05 — cbindgen: generating a C header from Rust
+### example_05 - cbindgen: generating a C header from Rust
 
-This example uses *cbindgen* to generate a C header automatically from Rust source — the inverse direction of example_04. The Rust library exposes a self-contained, side-effect-free `checksum()` function, the kind of pure logic a migration should move to Rust first, declared `unsafe extern "C" fn` for the same reason as `divide()` in example_02: a null check narrows the failure mode but doesn't prove the data pointer is valid for `len` bytes. `build.rs` regenerates `embedded_rust_lib.h` on every `cargo build`, so the header can never fall out of sync with the exported Rust API. `main.c` reuses example_02's bare-metal harness, checking a normal buffer, an empty buffer, and a null pointer against what the Rust source promises, and blinks the onboard LED steadily if the generated header and the compiled library agree.
+The inverse of example_04: *cbindgen* generates a C header automatically from a Rust `checksum()` function, regenerated on every build.
 
 **Available on:**
 [Blue Pill (STM32F103C8T6)](CH10/example_05/bluepill_STM32F103C8T6) ·

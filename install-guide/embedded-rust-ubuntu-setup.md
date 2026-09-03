@@ -2,7 +2,7 @@
 
 A reproducible setup guide for building, flashing, and debugging embedded Rust projects on Ubuntu (24.04 / 26.04 LTS). Targets ARM Cortex-M boards such as the STM32F103C8T6 ("Blue Pill"), with optional tooling for PIC simulation and broader microcontroller work.
 
-Run each section in order. Where two installation methods are listed (e.g. apt and snap), pick whichever your distribution supports best, you don't need both.
+Run each section in order. Where two installation methods are listed (e.g. apt and snap), pick whichever your distribution supports best; you don't need both.
 
 ---
 
@@ -15,10 +15,10 @@ sudo apt update
 sudo apt install build-essential curl git libssl-dev
 ```
 
-- `build-essential` — C compiler and headers, required by some `cargo install` targets.
-- `curl` — used to fetch the rustup installer and probe-rs installer.
-- `git` — for cloning the book examples and other repositories.
-- `libssl-dev` — required to build `cargo-generate` from source.
+- `build-essential`: C compiler and headers, required by some `cargo install` targets.
+- `curl`: used to fetch the rustup installer and probe-rs installer.
+- `git`: for cloning the book examples and other repositories.
+- `libssl-dev`: required to build `cargo-generate` from source.
 
 Optional editors and viewers:
 
@@ -75,7 +75,7 @@ sudo apt install gcc-arm-none-eabi binutils-arm-none-eabi gdb-multiarch
 
 `gdb-multiarch` is the GDB binary you point at the `target/thumbv7m-none-eabi/debug/<bin>` ELF when debugging.
 
-Optional — drop in the popular gdb-dashboard configuration:
+Optional: drop in the popular gdb-dashboard configuration.
 
 ```bash
 wget -P ~ https://github.com/cyrus-and/gdb-dashboard/raw/master/.gdbinit
@@ -91,7 +91,7 @@ sudo apt install qemu-system-arm
 
 ## 4. Flashing and on-chip debugging
 
-You need at least one of these — most workflows use both `probe-rs` (modern, one-shot run-and-print) and OpenOCD + GDB (interactive debugging).
+You need at least one of these; most workflows use both `probe-rs` (modern, one-shot run-and-print) and OpenOCD + GDB (interactive debugging).
 
 ### 4.1 ST-Link tools (for STM32 boards)
 
@@ -139,7 +139,7 @@ You can then `cargo run` a Rust binary and have it flashed and its `defmt` / RTT
 
 ## 5. Serial terminals
 
-For UART output from the target board pick whichever you prefer; `picocom` is the lightest:
+For UART output from the target board pick whichever you prefer; `picocom` is the lightest.
 
 ```bash
 sudo apt install picocom minicom screen putty
@@ -171,7 +171,7 @@ Install runtime dependencies first:
 sudo apt install libfuse2t64 curl file desktop-file-utils
 ```
 
-Then install the PICSimLab `.deb` package downloaded from the [PICSimLab releases page](https://github.com/lcgamboa/picsimlab/releases). Pick the build that matches your Ubuntu version:
+Then install the PICSimLab `.deb` package downloaded from the [PICSimLab releases page](https://github.com/lcgamboa/picsimlab/releases). Pick the build that matches your Ubuntu version.
 
 ```bash
 sudo dpkg -i PICSimLab_<version>_<date>_Ubuntu_<release>_amd64.deb
