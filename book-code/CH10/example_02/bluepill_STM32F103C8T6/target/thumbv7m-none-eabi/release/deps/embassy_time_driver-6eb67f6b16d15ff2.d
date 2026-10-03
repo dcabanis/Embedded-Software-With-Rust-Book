@@ -1,9 +1,0 @@
-/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_02/bluepill_STM32F103C8T6/target/thumbv7m-none-eabi/release/deps/embassy_time_driver-6eb67f6b16d15ff2.d: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-driver-0.2.2/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-driver-0.2.2/src/tick.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-driver-0.2.2/src/../README.md
-
-/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_02/bluepill_STM32F103C8T6/target/thumbv7m-none-eabi/release/deps/libembassy_time_driver-6eb67f6b16d15ff2.rlib: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-driver-0.2.2/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-driver-0.2.2/src/tick.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-driver-0.2.2/src/../README.md
-
-/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_02/bluepill_STM32F103C8T6/target/thumbv7m-none-eabi/release/deps/libembassy_time_driver-6eb67f6b16d15ff2.rmeta: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-driver-0.2.2/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-driver-0.2.2/src/tick.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-driver-0.2.2/src/../README.md
-
-/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-driver-0.2.2/src/lib.rs:
-/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-driver-0.2.2/src/tick.rs:
-/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-time-driver-0.2.2/src/../README.md:

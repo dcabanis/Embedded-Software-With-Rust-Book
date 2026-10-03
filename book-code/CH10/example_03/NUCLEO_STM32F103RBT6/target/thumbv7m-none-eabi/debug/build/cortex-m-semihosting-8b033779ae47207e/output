@@ -1,2 +1,0 @@
-cargo:rustc-check-cfg=cfg(thumb)
-cargo:rustc-cfg=thumb

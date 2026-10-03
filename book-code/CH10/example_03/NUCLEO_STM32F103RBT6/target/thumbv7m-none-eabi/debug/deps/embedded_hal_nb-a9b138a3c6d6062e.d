@@ -1,9 +1,0 @@
-/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_03/NUCLEO_STM32F103RBT6/target/thumbv7m-none-eabi/debug/deps/embedded_hal_nb-a9b138a3c6d6062e.d: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embedded-hal-nb-1.0.0/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embedded-hal-nb-1.0.0/src/serial.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embedded-hal-nb-1.0.0/src/spi.rs
-
-/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_03/NUCLEO_STM32F103RBT6/target/thumbv7m-none-eabi/debug/deps/libembedded_hal_nb-a9b138a3c6d6062e.rlib: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embedded-hal-nb-1.0.0/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embedded-hal-nb-1.0.0/src/serial.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embedded-hal-nb-1.0.0/src/spi.rs
-
-/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_03/NUCLEO_STM32F103RBT6/target/thumbv7m-none-eabi/debug/deps/libembedded_hal_nb-a9b138a3c6d6062e.rmeta: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embedded-hal-nb-1.0.0/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embedded-hal-nb-1.0.0/src/serial.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embedded-hal-nb-1.0.0/src/spi.rs
-
-/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embedded-hal-nb-1.0.0/src/lib.rs:
-/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embedded-hal-nb-1.0.0/src/serial.rs:
-/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embedded-hal-nb-1.0.0/src/spi.rs:

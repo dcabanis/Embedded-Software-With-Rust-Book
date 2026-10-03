@@ -1,9 +1,0 @@
-/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_02/NUCLEO_STM32F103RBT6/target/thumbv7m-none-eabi/release/deps/embassy_usb_driver-4760baaa8345aa01.d: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-usb-driver-0.2.2/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-usb-driver-0.2.2/src/host.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-usb-driver-0.2.2/src/../README.md
-
-/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_02/NUCLEO_STM32F103RBT6/target/thumbv7m-none-eabi/release/deps/libembassy_usb_driver-4760baaa8345aa01.rlib: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-usb-driver-0.2.2/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-usb-driver-0.2.2/src/host.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-usb-driver-0.2.2/src/../README.md
-
-/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_02/NUCLEO_STM32F103RBT6/target/thumbv7m-none-eabi/release/deps/libembassy_usb_driver-4760baaa8345aa01.rmeta: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-usb-driver-0.2.2/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-usb-driver-0.2.2/src/host.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-usb-driver-0.2.2/src/../README.md
-
-/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-usb-driver-0.2.2/src/lib.rs:
-/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-usb-driver-0.2.2/src/host.rs:
-/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/embassy-usb-driver-0.2.2/src/../README.md:

@@ -1,1 +1,0 @@
-/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_05/bluepill_stock_STM32F103C8T6/rust/led_logic/target/thumbv7m-none-eabi/release/libled_logic.a: /home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_05/bluepill_stock_STM32F103C8T6/rust/led_logic/src/lib.rs

@@ -1,5 +1,0 @@
-/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_02/NUCLEO_STM32F103RBT6/target/thumbv7m-none-eabi/release/deps/app-965a93339c9a7dbb.d: src/main.rs
-
-/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_02/NUCLEO_STM32F103RBT6/target/thumbv7m-none-eabi/release/deps/app-965a93339c9a7dbb: src/main.rs
-
-src/main.rs:
