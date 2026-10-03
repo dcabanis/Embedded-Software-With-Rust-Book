@@ -1,70 +1,70 @@
-# example_02  Calling Rust from C: a `no_std` static library
+# example_02 — Fan state machine rebuilt with Embassy (NUCLEO-F103RB)
 
-This example inverts the usual project shape and demonstrates a plain C application owns `main()`, the startup code, and the linker script, and links against a Rust `no_std` static library built separately.
-This is the brownfield arrangement, Rust enters underneath an existing C application, not the other way around.
+This is the NUCLEO-F103RB port of `../bluepill_STM32F103C8T6`, which rebuilds example_01's fan controller from section 8.2 as an async Embassy task (section 8.3.2). See that project's README for the full explanation of the design; this one only covers what differs for this board.
 
-## Layout
+`Fan`/`FanState`/`Event` in `src/lib.rs` are byte-for-byte identical to every other port of this state machine and still unit-testable on the host.
 
-- `rust_lib/`  a `staticlib` crate (`crate-type = ["staticlib"]`) exposing
-  two `#[unsafe(no_mangle)]` functions:
-  - `pub extern "C" fn square(value: i32) -> i32`
-  - `pub unsafe extern "C" fn divide(a: i32, b: i32, result: *mut i32) -> i32`,
-    which reports success or failure through an integer error code (`0`
-    success, `-1` divide by zero or overflow, `-2` null output pointer)
-    rather than a `Result`. It's declared `unsafe extern "C" fn`
-    because a null check on `result` narrows the failure mode but doesn't
-    prove the pointer is valid for a write; `a.checked_div(b)` covers both
-    division by zero and the one case a manual `b == 0` check misses,
-    `i32::MIN / -1`, which panics unconditionally in Rust regardless of
-    build profile.
-- `my_rust_lib.h` the hand-written C header declaring both functions.
-- `startup.s` a minimal hand-written Cortex-M3 vector table and
-  `Reset_Handler` (copies `.data` from Flash, zeroes `.bss`, calls `main`).
-- `stm32f103.ld` the linker script placing the vector table, `.text`,
-  `.data`/`.bss`, and defining `_stack_top` (128 KiB Flash on the
-  STM32F103RBT6, vs. 64 KiB on the Blue Pill).
-- `main.c` calls into the Rust library, checks every result (including
-  the deliberate divide-by-zero, `INT32_MIN / -1` overflow, and
-  null-pointer error paths), then blinks the NUCLEO-F103RB's user LED
-  (LD2, on PA5) steadily if every check passed. LD2 is active-high, the opposite polarity from the Blue Pill's PC13, so the on/off logic is inverted from example_02's Blue Pill variant. If any check fails, meaning the two sides disagree about the ABI, the LED latches on solid instead, so a layout mismatch is visible without a debugger.
+## Hardware
+
+- **Button (mode select)**: the NUCLEO board's own **B1 (USER)** button on **PC13**, no wiring required — same as example_01's NUCLEO port. B1 is pulled up on the board and pulls PC13 to ground when pressed, so the firmware requests no internal pull and triggers on the falling edge.
+- **Tachometer stand-in**: **PB4**, external wiring required — a momentary button between PB4 and ground, using the internal pull-up (idle high, press low, falling edge). This is the *same pin and electrical configuration* as the bluepill_STM32F103C8T6 port's tachometer stand-in, kept identical across both boards on request. PB4 defaults to a JTAG signal (JTRST) on this chip, exactly as it does on the Blue Pill, so it needs the same AFIO release — see **Notes**. As on the bluepill port, press it repeatedly (faster than every 200 ms) to simulate a running motor, or stop pressing it to simulate a stall.
+- **Indicator**: the board's own **LD2** LED (PA5, active-high) — same as example_01's NUCLEO port. Opposite polarity from the bluepill port's PB8, so `set_outputs()` here uses `set_high()`/`set_low()` the other way around.
+- **Not yet hardware-verified on this specific board.** This port was written and compile/lint/host-test-verified while a different board (bluepill_STM32F103C8T6) was connected; PB4 in particular is assumed free on this board's headers (it carries no special role on the NUCLEO-F103RB board itself, only the chip-level JTRST function shared with every STM32F103), but that assumption has not yet been confirmed by actually wiring a button to it and flashing this firmware.
 
 ## Build
 
-The `Makefile` reproduces the exact two-step process.
-first `cargo build` compiles the Rust static library for
-`thumbv7m-none-eabi`, then `arm-none-eabi-gcc` compiles and links
-`main.c` + `startup.s` against it.
-
 ```sh
-make
+cargo build --release
 ```
 
-This produces `app.elf` and `app.bin`. `-Wl,--gc-sections` (paired with
-`-ffunction-sections`/`-fdata-sections` on the C side) matters here more
-than usual: `core` compiles to a single object file inside
-`librust_lib.a`, and without section garbage collection the linker pulls
-in the whole thing just to resolve `square`/`divide`, overflowing the
-Flash region. With it, the final image is well under 1 KiB.
+## Run — Path A: probe-rs (recommended)
 
-## Flash
+**A debugger must be attached to see the semihosting output.**
 
 ```sh
+cargo run --release
+```
+
+Press B1 once, then either press the PB4 button repeatedly (faster than every 200 ms) or leave it alone:
+
+```
+fan controller ready
+fan speed = 0
+fan speed = 1
+fan speed = 0
+```
+
+`fan speed = 1` is `Off -> Low` from the B1 press; the second `fan speed = 0` is the stall firing 200 ms after the last PB4 pulse (or immediately if PB4 is never pressed), with LD2 turning on. Pressing B1 again while stalled resets to `Off` and turns LD2 back off.
+
+## Run — Path B: OpenOCD (flash only)
+
+`run_openocd.sh` flashes the firmware but does not decode semihosting output; use Path A to see the log.
+
+```sh
+cargo build
 ./run_openocd.sh
 ```
 
-Or flash `app.bin` at `0x08000000` with your tool of choice (`st-flash`,
-`probe-rs`, etc.) there is no `cargo run` here since this isn't a Cargo
-firmware project.
-
-## Expected behaviour
-
-LD2 blinks at a steady ~4 Hz (250 ms SysTick-driven toggle), confirming
-`square(9) == 81` and that `divide()`'s success path, its two error
-paths, and the `INT32_MIN / -1` overflow case all returned exactly what
-the Rust side promised.
-
-## Clean
+## Host tests
 
 ```sh
-make clean
+cargo test --lib --target x86_64-unknown-linux-gnu
 ```
+
+(Substitute your own host triple if different — see `rustc -vV`.) This works because every Embassy/Cortex-M dependency lives in a `[target.'cfg(target_arch = "arm")'.dependencies]` table in `Cargo.toml` rather than plain `[dependencies]` — see the bluepill port's README for why that split is necessary.
+
+## Notes
+
+**PB4 defaults to a JTAG pin function** on this chip (JTRST), same as on the bluepill_STM32F103C8T6 port. `main()` releases it (and PA15/PB3 as an unavoidable side effect of the same AFIO register bit, even though this example doesn't use them) via a direct `stm32-metapac` write, since `embassy-stm32` has no higher-level API for this:
+
+```rust
+stm32_metapac::AFIO
+    .mapr()
+    .modify(|w| w.set_swj_cfg(stm32_metapac::afio::vals::SwjCfg::JTAG_DISABLE));
+```
+
+SWD debugging (what probe-rs uses here) keeps working afterward.
+
+**No `memory.x` file** — `embassy-stm32`'s `memory-x` feature supplies the 128 KB/20 KB layout for the `stm32f103rb` chip selection itself.
+
+**No manual `DBGMCU_CR.DBG_SLEEP` handling needed** — `embassy_stm32::Config`'s `enable_debug_during_sleep` defaults to `true`, unlike example_01's NUCLEO port (which sets the equivalent bit by hand using `stm32f1xx-hal`).

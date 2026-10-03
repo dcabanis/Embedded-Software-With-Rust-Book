@@ -1,11 +1,8 @@
 # example_05  Lightweight fixed-capacity containers with `arrayvec`
 
-This example demonstrates `ArrayVec<T, N>` and `ArrayString<N>` from the
-`arrayvec` crate on the STM32F103RBT6 (NUCLEO-F103RB).
+This example demonstrates `ArrayVec<T, N>` and `ArrayString<N>` from the `arrayvec` crate on the STM32F103RBT6 (NUCLEO-F103RB).
 
-`arrayvec` is a lighter dependency than `heapless` when the project only needs
-a fixed-capacity vector or string without the broader toolbox (`Deque`,
-`BinaryHeap`, lock-free queues).  No global allocator is required.
+`arrayvec` is a lighter dependency than `heapless` when the project only needs a fixed-capacity vector or string without the broader toolbox (`Deque`, `BinaryHeap`, lock-free queues).  No global allocator is required.
 
 
 ## Build

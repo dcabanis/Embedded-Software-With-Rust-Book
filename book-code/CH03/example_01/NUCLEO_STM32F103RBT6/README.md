@@ -1,10 +1,6 @@
 # example_01  Minimal HAL project with semihosting on the NUCLEO-F103RB
 
-This is the chapter-3 starting-point project. This example prints
-`"Hello, world!"` through semihosting. The purpose is to show the canonical
-embedded-Rust project structure, `#![no_std]` / `#![no_main]`, runtime entry
-point, peripheral singleton, and a HAL import, before adding any real hardware
-interaction. **A debugger must be attached to see the semihosting output.**
+This is the chapter-3 starting-point project. This example prints `"Hello, world!"` through semihosting. The purpose is to show the canonical embedded-Rust project structure, `#![no_std]` / `#![no_main]`, runtime entry point, peripheral singleton, and a HAL import, before adding any real hardware interaction. **A debugger must be attached to see the semihosting output.**
 
 ## Build
 

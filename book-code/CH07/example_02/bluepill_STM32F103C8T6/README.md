@@ -1,10 +1,6 @@
 # example_02  Global allocator with `buddy_system_allocator` (`LockedHeap`)
 
-This example installs a global heap allocator using the `buddy_system_allocator`
-crate on the STM32F103C8T6 (Blue Pill).  The buddy allocator organises free
-memory into power-of-two size classes.  Each allocation is rounded up to the
-next power of two (internal fragmentation), in exchange for bounded worst-case
-timing and predictable fragmentation behaviour over long uptimes.
+This example installs a global heap allocator using the `buddy_system_allocator` crate on the STM32F103C8T6 (Blue Pill).  The buddy allocator organises free memory into power-of-two size classes.  Each allocation is rounded up to the next power of two (internal fragmentation), in exchange for bounded worst-case timing and predictable fragmentation behaviour over long uptimes.
 
 
 ## Build

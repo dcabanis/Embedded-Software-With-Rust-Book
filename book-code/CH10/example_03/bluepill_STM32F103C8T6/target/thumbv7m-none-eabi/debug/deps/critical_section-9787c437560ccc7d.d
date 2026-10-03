@@ -1,0 +1,9 @@
+/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_03/bluepill_STM32F103C8T6/target/thumbv7m-none-eabi/debug/deps/critical_section-9787c437560ccc7d.d: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/mutex.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/../README.md
+
+/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_03/bluepill_STM32F103C8T6/target/thumbv7m-none-eabi/debug/deps/libcritical_section-9787c437560ccc7d.rlib: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/mutex.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/../README.md
+
+/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_03/bluepill_STM32F103C8T6/target/thumbv7m-none-eabi/debug/deps/libcritical_section-9787c437560ccc7d.rmeta: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/mutex.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/../README.md
+
+/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/lib.rs:
+/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/mutex.rs:
+/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/../README.md:

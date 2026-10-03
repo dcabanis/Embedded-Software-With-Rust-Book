@@ -1,0 +1,25 @@
+[package]
+name = "app"
+version = "0.1.0"
+authors = ["David Cabanis <davidcabanis@gmail.com>"]
+edition = "2021"
+
+[profile.release]
+debug = 2
+
+# Embassy's Cortex-M backend contains unconditional inline ARM assembly, so
+# these dependencies must stay out of the host's build graph entirely (a
+# plain [dependencies] table would try, and fail, to compile them for
+# `cargo test --lib --target <host-triple>`; see README's Host tests).
+[target.'cfg(target_arch = "arm")'.dependencies]
+embassy-executor = { version = "=0.10.0", features = ["platform-cortex-m", "executor-thread", "executor-interrupt"] }
+embassy-stm32 = { version = "=0.6.0", features = ["stm32f103rb", "exti", "time-driver-tim2", "memory-x"] }
+embassy-time = "=0.5.1"
+embassy-futures = "=0.1.2"
+embassy-sync = "=0.8.0"
+stm32-metapac = { version = "=21.0.0", features = ["stm32f103rb"] }
+cortex-m = { version = "=0.7.9", features = ["critical-section-single-core"] }
+cortex-m-rt = "=0.7.6"
+cortex-m-semihosting = "0.6"
+static_cell = "=2.1.1"
+panic-halt = "=1.0.0"

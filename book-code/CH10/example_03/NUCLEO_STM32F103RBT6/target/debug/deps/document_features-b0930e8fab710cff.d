@@ -1,0 +1,5 @@
+/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_03/NUCLEO_STM32F103RBT6/target/debug/deps/document_features-b0930e8fab710cff.d: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/document-features-0.2.12/lib.rs
+
+/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_03/NUCLEO_STM32F103RBT6/target/debug/deps/libdocument_features-b0930e8fab710cff.so: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/document-features-0.2.12/lib.rs
+
+/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/document-features-0.2.12/lib.rs:

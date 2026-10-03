@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Flashes app.elf (built by `make`) and resets the target to run it.
-ELF="app.elf"
+# Flash only — this script does not decode semihosting output.
+# Use 'cargo run --release' (probe-rs) to see the log output.
+ELF="target/thumbv7m-none-eabi/debug/app"
 OPENOCD_BIN="${OPENOCD_BIN:-/usr/bin/openocd}"
 if [[ ! -f "$ELF" ]]; then
-  echo "Missing $ELF. Build first with: make"
+  echo "Missing $ELF. Build first with: cargo build"
   exit 1
 fi
 if [[ ! -x "$OPENOCD_BIN" ]]; then

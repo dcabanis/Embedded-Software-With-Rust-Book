@@ -2,24 +2,15 @@
 
 **Target board: STM32F3DISCOVERY (STM32F303VCT6, Cortex-M4F)**
 
-This example configures the Memory Protection Unit (MPU) to enforce a 32-byte
-no-access guard region at the bottom of RAM, providing hardware-level detection
-of stack overflows.
+This example configures the Memory Protection Unit (MPU) to enforce a 32-byte no-access guard region at the bottom of RAM, providing hardware-level detection of stack overflows.
 
-The STM32F103C8T6 (Blue Pill, Cortex-M3) used in examples 01–08 does **not**
-implement the optional MPU, so this example targets the STM32F3DISCOVERY board
-instead.  The STM32F303VCT6 has a Cortex-M4F core with an 8-region ARMv7-M MPU.
+The STM32F103C8T6 (Blue Pill, Cortex-M3) used in examples 01–08 does **not** implement the optional MPU, so this example targets the STM32F3DISCOVERY board instead.  The STM32F303VCT6 has a Cortex-M4F core with an 8-region ARMv7-M MPU.
 
 ## How it works
 
-In the default `cortex-m-rt` layout the stack occupies the top of RAM and grows
-downward.  A severe overflow would eventually write below `ORIGIN(RAM)`.
+In the default `cortex-m-rt` layout the stack occupies the top of RAM and grows downward.  A severe overflow would eventually write below `ORIGIN(RAM)`.
 
-`install_stack_guard` programs MPU region 0 as a 32-byte no-access
-execute-never region starting at `_stack_bottom = ORIGIN(RAM) = 0x2000_0000`.
-Any read, write, or fetch within that region raises a MemManage fault, which
-escalates to HardFault if the MemManage exception is not separately enabled.
-The fault is precise and hardware-enforced — no polling, no canary writes.
+`install_stack_guard` programs MPU region 0 as a 32-byte no-access execute-never region starting at `_stack_bottom = ORIGIN(RAM) = 0x2000_0000`. Any read, write, or fetch within that region raises a MemManage fault, which escalates to HardFault if the MemManage exception is not separately enabled. The fault is precise and hardware-enforced — no polling, no canary writes.
 
 ## Register encoding (ARMv7-M MPU)
 
@@ -69,8 +60,7 @@ INFO  Normal operation continues — no access to the guard region.
 
 The program then loops indefinitely.
 
-To verify the guard fires, uncomment the `write_volatile` call in `main`.
-The device will fault immediately and probe-rs will show the target halted.
+To verify the guard fires, uncomment the `write_volatile` call in `main`. The device will fault immediately and probe-rs will show the target halted.
 
 ## Run  Path B: cargo embed
 

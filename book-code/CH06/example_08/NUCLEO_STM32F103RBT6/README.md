@@ -1,9 +1,6 @@
 # example_08  DWT Cycle-Counter Profiling
 
-This example demonstrates cycle-accurate timing measurement using the
-Cortex-M Data Watchpoint and Trace (DWT) unit on the STM32F103RBT6
-(NUCLEO-F103RB). The firmware enables the DWT cycle counter, times two
-`nop`-loop tasks of different lengths, and reports the elapsed cycles over RTT.
+This example demonstrates cycle-accurate timing measurement using the Cortex-M Data Watchpoint and Trace (DWT) unit on the STM32F103RBT6 (NUCLEO-F103RB). The firmware enables the DWT cycle counter, times two `nop`-loop tasks of different lengths, and reports the elapsed cycles over RTT.
 
 ## Build
 
@@ -70,19 +67,12 @@ Task B took 3000000 cycles
 
 > The cycle numbers depend on your setup.
 
-Task B takes approximately twice as long as Task A because its loop runs
-twice as many iterations (1 000 000 vs 500 000). Absolute cycle counts
-depend on the optimisation level; at `opt-level = 1`.
+Task B takes approximately twice as long as Task A because its loop runs twice as many iterations (1 000 000 vs 500 000). Absolute cycle counts depend on the optimisation level; at `opt-level = 1`.
 
 ## Why `wrapping_sub`
 
-`CYCCNT` is a free-running 32-bit counter. `wrapping_sub` produces the
-correct elapsed count even when the counter wraps between the two reads.
+`CYCCNT` is a free-running 32-bit counter. `wrapping_sub` produces the correct elapsed count even when the counter wraps between the two reads.
 
 ## Why `opt-level = 1`
 
-At `opt-level = 3`, LLVM recognises that the `nop` loops have no
-observable side effects and removes them. `opt-level = 1` applies only
-basic optimisations and preserves the loops. In production profiling you
-would wrap real code in DWT measurements rather than nop loops, so this
-constraint does not apply.
+At `opt-level = 3`, LLVM recognises that the `nop` loops have no observable side effects and removes them. `opt-level = 1` applies only basic optimisations and preserves the loops. In production profiling you would wrap real code in DWT measurements rather than nop loops, so this constraint does not apply.

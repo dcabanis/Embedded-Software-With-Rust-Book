@@ -1,15 +1,8 @@
 # example_09 SysTick-Based Cycle Measurement
 
-This example demonstrates SysTick-based timing as a fallback for 
-Cortex-M cores that lack a DWT cycle counter (Cortex-M0 /M0+). 
-The firmware configures SysTick as a free-running down-counter,
-measures `do_work()` by reading the counter before and after, and reports
-the elapsed cycles over RTT.
+This example demonstrates SysTick-based timing as a fallback for Cortex-M cores that lack a DWT cycle counter (Cortex-M0 /M0+). The firmware configures SysTick as a free-running down-counter, measures `do_work()` by reading the counter before and after, and reports the elapsed cycles over RTT.
 
-The Blue Pill is a Cortex-M3 and does have DWT, so the DWT approach from
-example_08 is preferable on this hardware. This example demonstrates the
-SysTick technique that would be used on Cortex-M0 / M0+ / M23 parts; the
-same code runs unchanged on a Cortex-M3.
+The Blue Pill is a Cortex-M3 and does have DWT, so the DWT approach from example_08 is preferable on this hardware. This example demonstrates the SysTick technique that would be used on Cortex-M0 / M0+ / M23 parts; the same code runs unchanged on a Cortex-M3.
 
 ## Build
 
@@ -75,15 +68,8 @@ Starting SysTick profiling...
 do_work() took 30000 cycles
 ```
 
-At `opt-level = 1` on the Blue Pill's 8 MHz HSI clock, `do_work()` (10 000
-`nop` iterations) takes roughly 30 000 cycles. The exact count varies with
-optimization level.
+At `opt-level = 1` on the Blue Pill's 8 MHz HSI clock, `do_work()` (10 000 `nop` iterations) takes roughly 30 000 cycles. The exact count varies with optimization level.
 
 ## SysTick limitations
 
-The 24-bit reload value (`0x00FF_FFFF`) limits the maximum measurable
-interval to 2^24 / 8 000 000 ≈ **2.1 seconds** at 8 MHz HSI. The
-`wrapping_sub` / mask pattern used here produces correct results only when
-the counter has not wrapped more than once during the measurement. For
-regions that may span multiple reload periods, a SysTick interrupt handler
-must count wraps; this example does not demonstrate that technique.
+The 24-bit reload value (`0x00FF_FFFF`) limits the maximum measurable interval to 2^24 / 8 000 000 ≈ **2.1 seconds** at 8 MHz HSI. The `wrapping_sub` / mask pattern used here produces correct results only when the counter has not wrapped more than once during the measurement. For regions that may span multiple reload periods, a SysTick interrupt handler must count wraps; this example does not demonstrate that technique.

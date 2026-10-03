@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Flash only — defmt output requires the ELF symbol table to decode.
+# Flash only — this script does not decode semihosting output.
 # Use 'cargo run --release' (probe-rs) to see the log output.
 ELF="target/thumbv7m-none-eabi/debug/app"
 OPENOCD_BIN="${OPENOCD_BIN:-/usr/bin/openocd}"

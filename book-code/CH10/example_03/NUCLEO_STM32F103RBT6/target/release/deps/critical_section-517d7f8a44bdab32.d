@@ -1,0 +1,9 @@
+/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_03/NUCLEO_STM32F103RBT6/target/release/deps/critical_section-517d7f8a44bdab32.d: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/mutex.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/../README.md
+
+/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_03/NUCLEO_STM32F103RBT6/target/release/deps/libcritical_section-517d7f8a44bdab32.rlib: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/mutex.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/../README.md
+
+/home/dcabanis/Documents/Embedded_Rust_book/My_book_GITLAB/cabanis/code/book-code/CH08/example_03/NUCLEO_STM32F103RBT6/target/release/deps/libcritical_section-517d7f8a44bdab32.rmeta: /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/lib.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/mutex.rs /home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/../README.md
+
+/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/lib.rs:
+/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/mutex.rs:
+/home/dcabanis/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/critical-section-1.2.0/src/../README.md:

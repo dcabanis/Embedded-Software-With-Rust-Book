@@ -16,8 +16,7 @@ cargo build
 
 ## Run  PICSimLab
 
-The `run_picsimlab.sh` script builds the release binary, loads the workspace,
-launches PICSimLab, and opens a log terminal when one is available.
+The `run_picsimlab.sh` script builds the release binary, loads the workspace, launches PICSimLab, and opens a log terminal when one is available.
 
 ```sh
 ./run_picsimlab.sh
@@ -43,5 +42,4 @@ Override the terminal used for the log window:
 TERMINAL_APP=gnome-terminal ./run_picsimlab.sh
 ```
 
-If no supported terminal is found, PICSimLab still starts but the log window is
-skipped.
+If no supported terminal is found, PICSimLab still starts but the log window is skipped.

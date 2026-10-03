@@ -1,9 +1,6 @@
 # example_07  Stack overflow detection with `flip-link`
 
-This example demonstrates the difference between a stack overflow with and
-without `flip-link` on the STM32F103C8T6 (Blue Pill).  The firmware calls an
-infinitely recursive function (`recurse`) that allocates 512 bytes of stack per
-frame until the 20 KiB RAM is exhausted (approximately 35–40 frames).
+This example demonstrates the difference between a stack overflow with and without `flip-link` on the STM32F103C8T6 (Blue Pill).  The firmware calls an infinitely recursive function (`recurse`) that allocates 512 bytes of stack per frame until the 20 KiB RAM is exhausted (approximately 35–40 frames).
 
 ## Setup
 
@@ -13,9 +10,7 @@ Install `flip-link` once per machine:
 cargo install flip-link
 ```
 
-To **enable** flip-link, uncomment the `"-C", "linker=flip-link"` line in
-`.cargo/config.toml`.  To **disable** it for comparison, leave the line
-commented out.
+To **enable** flip-link, uncomment the `"-C", "linker=flip-link"` line in `.cargo/config.toml`.  To **disable** it for comparison, leave the line commented out.
 
 ## Build
 

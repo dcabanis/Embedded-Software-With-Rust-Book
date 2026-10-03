@@ -1,142 +1,150 @@
 #![no_std]
 #![no_main]
-#![deny(improper_ctypes)]
-#![deny(improper_ctypes_definitions)]
 
+use core::cell::RefCell;
+use cortex_m::interrupt::Mutex;
 use cortex_m_rt::entry;
-use defmt_rtt as _;
-use panic_probe as _;
+use cortex_m_semihosting::hprintln;
+use panic_halt as _;
+use stm32f1xx_hal::{
+    gpio::{
+        gpiob::{PB3, PB4, PB8},
+        Edge, ExtiPin, Input, Output, PullUp, PushPull,
+    },
+    pac::{self, interrupt},
+    prelude::*,
+};
 
-// C declarations and the lint suppressions they need stay quarantined
-// here; the rest of the crate stays fully convention-checked.
-#[allow(non_upper_case_globals)]
-#[allow(non_camel_case_types)]
-#[allow(non_snake_case)]
-mod ffi {
-    use core::ffi::c_int;
+use app::{Event, Fan, FanState};
 
-    // A `DeviceState` byte written by C is not proven to be one of the
-    // three valid variants: C only ever sees a `uint8_t`, and
-    // nothing stops it from writing `3` or `255`. Reading an arbitrary
-    // byte back as a real `#[repr(u8)] enum` would be undefined
-    // behavior the moment that byte isn't one of the declared variants.
-    // Wrapping it as a plain, `#[repr(transparent)]` integer first,
-    // matched against the C `typedef uint8_t DeviceState` in
-    // c/device_status.h, defers that risk until `checked()` actually
-    // validates the value.
-    #[repr(transparent)]
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, defmt::Format)]
-    pub struct DeviceState(pub u8);
-
-    // Mirrors the full C-side constant set for documentation parity, even
-    // though this example only ever constructs DEVICE_STATE_IDLE by hand.
-    #[allow(dead_code)]
-    pub const DEVICE_STATE_IDLE: DeviceState = DeviceState(0);
-    #[allow(dead_code)]
-    pub const DEVICE_STATE_ACTIVE: DeviceState = DeviceState(1);
-    #[allow(dead_code)]
-    pub const DEVICE_STATE_ERROR: DeviceState = DeviceState(2);
-
-    // The real Rust enum, with real exhaustiveness checking. It only
-    // ever gets created through `DeviceState::checked()`.
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, defmt::Format)]
-    pub enum CheckedDeviceState {
-        Idle,
-        Active,
-        Error,
-    }
-
-    impl DeviceState {
-        pub fn checked(self) -> Option<CheckedDeviceState> {
-            match self.0 {
-                0 => Some(CheckedDeviceState::Idle),
-                1 => Some(CheckedDeviceState::Active),
-                2 => Some(CheckedDeviceState::Error),
-                _ => None,
-            }
-        }
-    }
-
-    // #[repr(C)] pins field order, alignment, and padding to C's rules
-    // so this layout matches `DeviceStatus` in device_status.h exactly.
-    // `#[repr(transparent)]` on `DeviceState` means swapping
-    // it in for a bare `u8` here changes nothing about that layout.
-    #[repr(C)]
-    #[derive(Debug, Clone, Copy, defmt::Format)]
-    pub struct DeviceStatus {
-        pub id: c_int,
-        pub state: DeviceState,
-        pub temperature: f32,
-    }
-
-    // Compile-time layout check mirroring the C-side _Static_assert.
-    const _: () = assert!(core::mem::size_of::<DeviceStatus>() == 12);
-
-    unsafe extern "C" {
-        pub fn add(a: c_int, b: c_int) -> c_int;
-        pub fn update_status(status: *mut DeviceStatus, delta_temp: f32);
-    }
-}
-
-// Safe wrapper: encapsulates the unsafe call behind an invariant the
-// caller can rely on).
-pub fn safe_add(a: i32, b: i32) -> i32 {
-    assert!(a >= 0 && b >= 0, "only non-negative values allowed");
-    unsafe { ffi::add(a, b) }
-}
-
-pub fn safe_update_status(status: &mut ffi::DeviceStatus, delta_temp: f32) {
-    unsafe { ffi::update_status(status, delta_temp) };
-}
-
-// Only used for logging: turns whatever byte C last wrote into a
-// human-readable name, treating anything outside the three valid
-// variants as a fault rather than guessing.
-fn state_name(state: ffi::DeviceState) -> &'static str {
-    match state.checked() {
-        Some(ffi::CheckedDeviceState::Idle) => "Idle",
-        Some(ffi::CheckedDeviceState::Active) => "Active",
-        Some(ffi::CheckedDeviceState::Error) => "Error",
-        None => "INVALID",
-    }
-}
+static FAN: Mutex<RefCell<Fan>> = Mutex::new(RefCell::new(Fan::new()));
+static BUTTON_PIN: Mutex<RefCell<Option<PB3<Input<PullUp>>>>> = Mutex::new(RefCell::new(None));
+static STALL_PIN: Mutex<RefCell<Option<PB4<Input<PullUp>>>>> = Mutex::new(RefCell::new(None));
 
 #[entry]
 fn main() -> ! {
-    let sum = safe_add(1940, 46);
-    defmt::info!("add(1940, 46) = {}", sum);
+    let dp = pac::Peripherals::take().unwrap();
 
-    let mut status = ffi::DeviceStatus {
-        id: 7,
-        state: ffi::DEVICE_STATE_IDLE,
-        temperature: 20.0,
-    };
-    defmt::info!(
-        "initial status: id={} state={} temperature={}",
-        status.id,
-        state_name(status.state),
-        status.temperature
-    );
+    // STM32F1 gates the debug clock domain during Sleep mode by default
+    // (DBGMCU_CR.DBG_SLEEP = 0), so a probe attached over SWD can lose
+    // contact with the core the moment `wfi()` runs below, breaking the
+    // SWD connection for any later reflash/reconnect until the board is
+    // reset. Setting this bit keeps the debug clock alive through Sleep.
+    dp.DBGMCU.cr().modify(|_, w| w.dbg_sleep().set_bit());
 
-    safe_update_status(&mut status, 5.5);
-    defmt::info!(
-        "after +5.5C: id={} state={} temperature={}",
-        status.id,
-        state_name(status.state),
-        status.temperature
-    );
+    let mut rcc = dp.RCC.constrain();
+    let mut afio = dp.AFIO.constrain(&mut rcc);
+    let mut exti = dp.EXTI;
+    let gpioa = dp.GPIOA.split(&mut rcc);
+    let mut gpiob = dp.GPIOB.split(&mut rcc);
 
-    // Pushes temperature past the C side's 60.0 threshold, so the C
-    // function itself flips the state to Error.
-    safe_update_status(&mut status, 60.0);
-    defmt::info!(
-        "after +60.0C: id={} state={} temperature={}",
-        status.id,
-        state_name(status.state),
-        status.temperature
-    );
+    // PB3 and PB4 default to JTAG signals (JTDO and JTRST) on this chip,
+    // so they must be released before they behave as plain GPIO. This also
+    // frees PA15 (JTDI) as a side effect of the same call, even though this
+    // example does not use it. SWD debugging (what probe-rs uses here)
+    // keeps working afterward — only the extra JTAG-only pins go away.
+    let (_pa15, pb3, pb4) = afio.mapr.disable_jtag(gpioa.pa15, gpiob.pb3, gpiob.pb4);
+
+    // This board's LEDs are active-low: LOW turns them on, HIGH turns
+    // them off. PB8 stands in for the board's fault indicator since no
+    // motor driver is attached.
+    let mut led = gpiob.pb8.into_push_pull_output(&mut gpiob.crh);
+    led.set_high();
+
+    // Both buttons read active-low with the internal pull-up enabled
+    // (idle high, pressed low), confirmed by testing on this board.
+    // PB3 and PB4 each have their own dedicated EXTI vector (EXTI3,
+    // EXTI4), unlike PC13 on the NUCLEO port, which shares EXTI15_10
+    // with seven other pins — so no interrupt-source disambiguation is
+    // needed in either handler below.
+    let mut button = pb3.into_pull_up_input(&mut gpiob.crl);
+    button.make_interrupt_source(&mut afio);
+    button.trigger_on_edge(&mut exti, Edge::Falling);
+    button.clear_interrupt_pending_bit();
+    button.enable_interrupt(&mut exti);
+
+    // Stands in for a tachometer or other stall sensor, which chapter
+    // 8.2.2 leaves outside the example; pressing this button submits
+    // Event::StallDetected the same way a real sensor handler would.
+    let mut stall = pb4.into_pull_up_input(&mut gpiob.crl);
+    stall.make_interrupt_source(&mut afio);
+    stall.trigger_on_edge(&mut exti, Edge::Falling);
+    stall.clear_interrupt_pending_bit();
+    stall.enable_interrupt(&mut exti);
+
+    cortex_m::interrupt::free(|cs| {
+        BUTTON_PIN.borrow(cs).replace(Some(button));
+        STALL_PIN.borrow(cs).replace(Some(stall));
+    });
+    unsafe {
+        pac::NVIC::unmask(pac::Interrupt::EXTI3);
+        pac::NVIC::unmask(pac::Interrupt::EXTI4);
+    }
+
+    hprintln!("fan controller ready");
+
+    let mut last_state = None;
 
     loop {
-        cortex_m::asm::nop();
+        cortex_m::interrupt::free(|cs| {
+            // Read and apply one consistent state while IRQs are masked.
+            let state = FAN.borrow(cs).borrow().state();
+            if last_state != Some(state) {
+                apply_state(state, &mut led);
+                last_state = Some(state);
+            }
+
+            // Keep the sleep boundary inside the same critical section.
+            cortex_m::asm::dsb();
+            cortex_m::asm::wfi();
+        });
     }
+}
+
+fn apply_state(state: FanState, led: &mut PB8<Output<PushPull>>) {
+    match state {
+        FanState::Off => set_outputs(0, false, led),
+        FanState::Low => set_outputs(1, false, led),
+        FanState::Medium => set_outputs(2, false, led),
+        FanState::High => set_outputs(3, false, led),
+        FanState::Stalled => set_outputs(0, true, led),
+    }
+}
+
+fn set_outputs(speed: u8, fault: bool, led: &mut PB8<Output<PushPull>>) {
+    set_fan_speed(speed);
+    set_fault_indicator(fault, led);
+}
+
+fn set_fan_speed(speed: u8) {
+    hprintln!("fan speed = {}", speed);
+}
+
+fn set_fault_indicator(active: bool, led: &mut PB8<Output<PushPull>>) {
+    // Active-low LED: LOW = on, HIGH = off.
+    if active {
+        led.set_low();
+    } else {
+        led.set_high();
+    }
+}
+
+#[interrupt]
+fn EXTI3() {
+    cortex_m::interrupt::free(|cs| {
+        if let Some(pin) = BUTTON_PIN.borrow(cs).borrow_mut().as_mut() {
+            pin.clear_interrupt_pending_bit();
+        }
+        FAN.borrow(cs).borrow_mut().handle(Event::ButtonPress);
+    });
+}
+
+#[interrupt]
+fn EXTI4() {
+    cortex_m::interrupt::free(|cs| {
+        if let Some(pin) = STALL_PIN.borrow(cs).borrow_mut().as_mut() {
+            pin.clear_interrupt_pending_bit();
+        }
+        FAN.borrow(cs).borrow_mut().handle(Event::StallDetected);
+    });
 }

@@ -1,14 +1,8 @@
 # example_06  Hybrid inline-or-heap containers: `tinyvec` and `smallvec`
 
-This example demonstrates `TinyVec` and `SmallVec` on the STM32F103RBT6
-(NUCLEO-F103RB).  Both types store the first N elements inline on the stack; once
-that inline capacity is exceeded, the data is moved to a heap allocation and
-the vector continues growing like a regular `Vec<T>`.
+This example demonstrates `TinyVec` and `SmallVec` on the STM32F103RBT6 (NUCLEO-F103RB).  Both types store the first N elements inline on the stack; once that inline capacity is exceeded, the data is moved to a heap allocation and the vector continues growing like a regular `Vec<T>`.
 
-**Important:** both crates still require a global allocator.  This example
-installs `embedded-alloc`'s `LlffHeap` (same as example_01) to handle the
-heap spill.  If your project does not otherwise need a heap, prefer a
-fixed-capacity type from `heapless` (example_04) or `arrayvec` (example_05).
+**Important:** both crates still require a global allocator.  This example installs `embedded-alloc`'s `LlffHeap` (same as example_01) to handle the heap spill.  If your project does not otherwise need a heap, prefer a fixed-capacity type from `heapless` (example_04) or `arrayvec` (example_05).
 
 ## Build
 

@@ -14,7 +14,7 @@ cargo build --release
 ./run_picsimlab.sh
 ```
 
-The script builds the binary, injects it into the PICSimLab workspace, and launches the simulator. The onboard LED on PC13 blinks at 500 ms intervals. 
+The script builds the binary, injects it into the PICSimLab workspace, and launches the simulator. The onboard LED on PC13 blinks at 500 ms intervals.
 
 ## Environment overrides
 

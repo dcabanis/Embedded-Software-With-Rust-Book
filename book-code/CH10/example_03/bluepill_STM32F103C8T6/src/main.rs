@@ -1,96 +1,120 @@
 #![no_std]
 #![no_main]
-#![deny(improper_ctypes)]
-#![deny(improper_ctypes_definitions)]
 
-use core::ffi::{c_int, c_void, CStr};
-use core::sync::atomic::{AtomicU32, Ordering};
-use cortex_m::peripheral::syst::SystClkSource;
-use cortex_m_rt::entry;
-use defmt_rtt as _;
-use panic_probe as _;
+use core::cell::RefCell;
+use cortex_m_semihosting::hprintln;
+use embassy_executor::{Executor, InterruptExecutor};
+use embassy_stm32::exti::ExtiInput;
+use embassy_stm32::gpio::{Level, Output, Pull, Speed};
+use embassy_stm32::interrupt::{InterruptExt, Priority};
+use embassy_stm32::{bind_interrupts, interrupt, peripherals, Peri};
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use embassy_sync::blocking_mutex::Mutex;
+use embassy_time::{Duration, Instant, Timer};
+use panic_halt as _;
+use static_cell::StaticCell;
 
-#[allow(non_upper_case_globals)]
-#[allow(non_camel_case_types)]
-#[allow(non_snake_case)]
-mod ffi {
-    use core::ffi::{c_char, c_int, c_void};
-
-    unsafe extern "C" {
-        pub fn sum_array(arr: *const i32, len: usize) -> i32;
-        pub fn c_string_len(s: *const c_char) -> usize;
-        pub fn register_callback_ctx(
-            cb: unsafe extern "C" fn(c_int, *mut c_void),
-            ctx: *mut c_void,
-        );
-        pub fn trigger_callback_ctx(value: c_int);
-    }
+struct Heartbeat {
+    led: Output<'static>,
+    stopped: bool,
 }
 
-// Rust's slice guarantees safety on this side; `as_ptr()` /
-// `len()` are all C needs to walk the same memory.
-pub fn safe_sum_array(slice: &[i32]) -> i32 {
-    unsafe { ffi::sum_array(slice.as_ptr(), slice.len()) }
+static HEARTBEAT: Mutex<CriticalSectionRawMutex, RefCell<Option<Heartbeat>>> =
+    Mutex::new(RefCell::new(None));
+
+// Executors with different priorities.
+static EXECUTOR_HIGH: InterruptExecutor = InterruptExecutor::new();
+static EXECUTOR_LOW: StaticCell<Executor> = StaticCell::new();
+
+bind_interrupts!(struct Irqs {
+    EXTI3 => embassy_stm32::exti::InterruptHandler<embassy_stm32::interrupt::typelevel::EXTI3>;
+});
+
+#[embassy_executor::task]
+async fn stop_task(pin: Peri<'static, peripherals::PB3>, exti: Peri<'static, peripherals::EXTI3>) {
+    let mut stop = ExtiInput::new(pin, exti, Pull::Up, Irqs);
+    // Also recognize a button already held down when the task starts.
+    stop.wait_for_low().await;
+
+    HEARTBEAT.lock(|cell| {
+        let mut state = cell.borrow_mut();
+        let heartbeat = state.as_mut().unwrap();
+        heartbeat.stopped = true;
+        heartbeat.led.set_high(); // PB8 high means LED off (active-low).
+    });
+    hprintln!("stop button pressed, heartbeat halted");
+    // This one-shot task ends; the shared flag retains the stop condition.
 }
 
-// Taking `&CStr` rather than `&str` forces the caller to hand over
-// something already NUL-terminated.
-pub fn safe_c_string_len(s: &CStr) -> usize {
-    unsafe { ffi::c_string_len(s.as_ptr()) }
-}
-
-static EVENT_COUNT: AtomicU32 = AtomicU32::new(0);
-
-/// The trampoline casts the generic `void*` context back into
-/// the concrete type it actually is, then does the real work.
-///
-/// SAFETY: `ctx` must be exactly the pointer registered in
-/// `install_callback` below: a valid, live `*const AtomicU32` for as long
-/// as the callback might fire. Nothing in the signature proves that, so
-/// the function itself is `unsafe extern "C" fn`, not just the cast
-/// inside it.
-unsafe extern "C" fn count_events(value: c_int, ctx: *mut c_void) {
-    // SAFETY: `ctx` is exactly the pointer registered in `install_callback`,
-    // and `EVENT_COUNT` lives for the whole program.
-    let counter = unsafe { &*(ctx as *const AtomicU32) };
-    let event_number = counter.fetch_add(1, Ordering::Relaxed) + 1;
-    defmt::info!("callback fired: value={} (event #{})", value, event_number);
-}
-
-fn install_callback() {
-    unsafe {
-        ffi::register_callback_ctx(count_events, &EVENT_COUNT as *const _ as *mut c_void);
-    }
-}
-
-#[entry]
-fn main() -> ! {
-    let values = [10, 20, 30, 40, 50];
-    let total = safe_sum_array(&values);
-    defmt::info!("sum_array({}) = {}", values, total);
-
-    // A `c"..."` literal is a &CStr with the terminating zero byte added
-    // by the compiler, no risk of handing C an unterminated Rust &str.
-    let banner = c"Hello from Rust";
-    let len = safe_c_string_len(banner);
-    defmt::info!("c_string_len(\"Hello from Rust\") = {}", len);
-
-    install_callback();
-
-    let cp = cortex_m::Peripherals::take().unwrap();
-    let mut syst = cp.SYST;
-    syst.set_clock_source(SystClkSource::Core);
-    syst.set_reload(8_000_000 - 1); // ~1 s at the 8 MHz HSI reset clock
-    syst.clear_current();
-    syst.enable_counter();
-
-    let mut tick: i32 = 0;
+#[embassy_executor::task]
+async fn heartbeat_task() {
     loop {
-        if syst.has_wrapped() {
-            tick += 1;
-            // C decides to call back into Rust here; Rust only supplied
-            // the function to call and the context to hand it.
-            unsafe { ffi::trigger_callback_ctx(tick) };
+        let running = HEARTBEAT.lock(|cell| {
+            let mut state = cell.borrow_mut();
+            let heartbeat = state.as_mut().unwrap();
+            if heartbeat.stopped {
+                false
+            } else {
+                heartbeat.led.set_low(); // Begin the lit interval.
+                true
+            }
+        });
+
+        if !running {
+            hprintln!("heartbeat task ending");
+            return; // Resetting the board is the only restart in this demo.
         }
+
+        // Deliberately occupy this executor without yielding.
+        // Interrupts remain enabled throughout this loop.
+        let end = Instant::now() + Duration::from_millis(500);
+        while Instant::now() < end {
+            core::hint::spin_loop();
+        }
+
+        HEARTBEAT.lock(|cell| {
+            cell.borrow_mut().as_mut().unwrap().led.set_high();
+        });
+        Timer::after_millis(500).await; // The dark interval can yield.
     }
+}
+
+// USART2 is reserved for the high-priority executor, not UART traffic.
+#[interrupt]
+unsafe fn USART2() {
+    unsafe { EXECUTOR_HIGH.on_interrupt() }
+}
+
+#[cortex_m_rt::entry]
+fn main() -> ! {
+    let p = embassy_stm32::init(Default::default());
+
+    // PB3 defaults to a JTAG signal on this chip (JTDO), so it must be
+    // released before it behaves as plain GPIO. This also frees PA15 and
+    // PB4 (JTDI and JTRST) as a side effect of the same call, even though
+    // this example does not use them. SWD debugging (what probe-rs uses
+    // here) keeps working afterward. embassy-stm32 has no higher-level API
+    // for this, so the AFIO register is written directly through
+    // stm32-metapac, the PAC crate embassy-stm32 itself is built on.
+    stm32_metapac::AFIO
+        .mapr()
+        .modify(|w| w.set_swj_cfg(stm32_metapac::afio::vals::SwjCfg::JTAG_DISABLE));
+
+    hprintln!("heartbeat demo ready");
+
+    HEARTBEAT.lock(|cell| {
+        cell.replace(Some(Heartbeat {
+            led: Output::new(p.PB8, Level::High, Speed::Low),
+            stopped: false,
+        }));
+    });
+
+    interrupt::USART2.set_priority(Priority::P6);
+    let high_spawner = EXECUTOR_HIGH.start(interrupt::USART2);
+    high_spawner.spawn(stop_task(p.PB3, p.EXTI3).unwrap());
+
+    let executor = EXECUTOR_LOW.init(Executor::new());
+    executor.run(|spawner| {
+        spawner.spawn(heartbeat_task().unwrap());
+    });
 }

@@ -1,7 +1,6 @@
 # example_02  Cargo feature flags for panic strategy on the NUCLEO-F103RB
 
-This example demonstrates compile-time feature selection for the panic handler.
-Two mutually exclusive features are defined in `Cargo.toml`: the default `panic-halt` feature links `panic-halt`, and the `semihosting` feature links `panic-semihosting` plus `cortex-m-semihosting`. A `#[cfg]` compile-time check enforces that exactly one feature is active. The firmware then triggers a panic so the chosen strategy can be observed in practice.
+This example demonstrates compile-time feature selection for the panic handler. Two mutually exclusive features are defined in `Cargo.toml`: the default `panic-halt` feature links `panic-halt`, and the `semihosting` feature links `panic-semihosting` plus `cortex-m-semihosting`. A `#[cfg]` compile-time check enforces that exactly one feature is active. The firmware then triggers a panic so the chosen strategy can be observed in practice.
 
 ## Build
 

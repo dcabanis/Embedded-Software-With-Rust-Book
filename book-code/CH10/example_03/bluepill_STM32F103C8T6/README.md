@@ -1,48 +1,22 @@
-# example_03  Advanced FFI: arrays, C strings, and stateful callbacks
+# example_03 — Preempting a busy task with an interrupt executor (STM32F103C8T6)
 
-This example covers  the "hard cases" of FFI beyond plain scalars and `#[repr(C)]` structs on the STM32F103C8T6 (Blue Pill).
+This is a separate demo from examples 01/02, illustrating section 8.3.3: how a higher-priority Embassy executor can interrupt a lower-priority task that is busy computing and hasn't reached an `.await` yet. There is no `Fan` state machine here — just a blinking LED and a stop button.
 
-`c/callback_lib.c` / `.h` provide three C functions:
+Two executors run concurrently:
 
-- `sum_array(const int32_t *arr, size_t len)`  a pointer + length pair,
-  the standard C shape for passing an array (10.4.1).
-- `c_string_len(const char *s)`  walks a NUL-terminated C string. There's
-  no `<string.h>` on this bare-metal target, so the library implements its
-  own `strlen`-equivalent.
-- `register_callback_ctx()` / `trigger_callback_ctx()`  the two-step
-  callback pattern from 10.4.3: register a function now, the library
-  calls it later. Unlike the book's first, simpler example, this is the
-  *context-carrying* version from the start: the C side also stores an
-  opaque `void *ctx` alongside the function pointer and hands it back
-  unchanged on every call.
+- A **thread-mode executor** runs `heartbeat_task()`: turn the LED on, spend 500 ms in a busy loop (deliberately *not* yielding, to simulate an occupied task), turn the LED off, then yield for 500 ms via an async delay.
+- An **interrupt executor**, bound to the (otherwise unused) USART2 interrupt vector at a higher NVIC priority, runs `stop_task()`: wait for the stop button, then set a shared flag and turn the LED off immediately — even if the heartbeat task is still in the middle of its 500 ms busy loop.
 
-On the Rust side, `src/main.rs` shows:
+Both tasks touch the same LED and flag, protected by a `Mutex` so a check and a write always happen together.
 
-- `safe_sum_array()` passing `slice.as_ptr()` / `slice.len()` straight
-  through — Rust's slice already guarantees the safety C can't.
-- `safe_c_string_len()` taking `&CStr` rather than `&str`, so the type
-  system itself rules out passing an unterminated Rust string. The `c"..."`
-  literal syntax builds the `&CStr` at compile time.
-- `count_events()`, the *trampoline*: an `unsafe extern "C" fn` that casts
-  the incoming `void *ctx` back into `&AtomicU32` and increments it.
-  Nothing in the type system proves the pointer C hands back is still
-  valid — that's a promise `main()` makes by construction, not something
-  the compiler checks — so the function itself is marked `unsafe`, not
-  just the cast inside it.
+## Hardware
 
-A polled SysTick (no interrupt) fires `trigger_callback_ctx()` roughly
-once a second from the main loop; C then calls back into `count_events()`,
-incrementing the counter and logging each firing via `defmt`.
+Same board as `../../example_01/bluepill_STM32F103C8T6` and `../../example_02/bluepill_STM32F103C8T6`; this example reuses their already-validated pins rather than the text's PC13/PB0, since neither of those was tested on this board:
 
-Expected output:
+- **LED**: **PB8**, active-low (matches the text's PC13 exactly in polarity — "high means off" — so the logic didn't need adjusting, only the pin).
+- **Stop button**: **PB3**, internal pull-up, active-low — again the same electrical configuration the text already uses for its PB0, so no polarity change was needed. PB3 defaults to a JTAG signal on this chip (JTDO) and is released the same way as in examples 01/02.
 
-```
-INFO  sum_array([10, 20, 30, 40, 50]) = 150
-INFO  c_string_len("Hello from Rust") = 15
-INFO  callback fired: value=1 (event #1)
-INFO  callback fired: value=2 (event #2)
-...
-```
+Confirmed on real hardware: the LED blinks steadily, and pressing PB3 mid-blink turns it off immediately and permanently (until reset), logging `stop button pressed, heartbeat halted` followed by `heartbeat task ending`.
 
 ## Build
 
@@ -50,18 +24,46 @@ INFO  callback fired: value=2 (event #2)
 cargo build --release
 ```
 
-## Run  Path A: probe-rs (recommended)
+## Run — Path A: probe-rs (recommended)
+
+**A debugger must be attached to see the semihosting output.**
 
 ```sh
 cargo run --release
 ```
 
-## Run  Path B: OpenOCD (flash only)
+Expected sequence:
 
-`defmt` output cannot be decoded by OpenOCD. Use `run_openocd.sh` only to
-flash the firmware; switch to probe-rs to view the log.
+```
+heartbeat demo ready
+```
+
+The LED then blinks on 500 ms / off 500 ms indefinitely. Press PB3 at any point — including mid-blink, while the busy loop is still running — and:
+
+```
+stop button pressed, heartbeat halted
+heartbeat task ending
+```
+
+The LED turns off immediately on the press and stays off. Only a board reset restarts the demo.
+
+## Run — Path B: OpenOCD (flash only)
+
+`run_openocd.sh` flashes the firmware but does not decode semihosting output; use Path A to see the log.
 
 ```sh
 cargo build
 ./run_openocd.sh
 ```
+
+## Notes
+
+**No host tests for this example** Unlike examples 01/02, there is no `Fan`-style pure-logic state machine here worth isolating into a host-testable `src/lib.rs` — the only "state" is a `bool` flag, and the behavior being demonstrated (preemption of a busy loop) is inherently a hardware/timing property, not something a host unit test could exercise.
+
+**`USART2` is borrowed only for its NVIC vector** This example never initializes a UART peripheral. `interrupt::USART2` is repurposed purely as a spare, otherwise-unused interrupt line for the high-priority executor to run on. Don't add a UART driver to this project without picking a different vector.
+
+**PB3 defaults to a JTAG pin function** on this chip (JTDO), same as in examples 01/02. `main()` releases it (and PA15/PB4, JTDI/JTRST, as an unavoidable side effect of the same AFIO register bit) via a direct `stm32-metapac` write, since `embassy-stm32` has no higher-level API for this. SWD debugging (what probe-rs uses here) keeps working afterward.
+
+**No `memory.x` file** — `embassy-stm32`'s `memory-x` feature supplies it.
+
+**Why the busy loop doesn't block the stop button** `heartbeat_task()`'s 500 ms loop only occupies the *low-priority* executor. The interrupt executor runs independently at a higher NVIC priority, so the CPU can still take the USART2 interrupt and run `stop_task()` to completion in the middle of that loop — this is the entire point of the demo. Interrupts stay enabled throughout the busy loop; nothing here masks them.
