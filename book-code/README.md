@@ -5,7 +5,7 @@ Companion source code organized by chapter. Each example lives inside a board-sp
 **PRO Tip:** Hardware boards can be temperamental at times. For one reason or another they stop responding, unwilling to be flashed. If this is something you are experiencing, you can try the following trick:
 
 - Hold the board's *reset* button pressed
-- Execute the terminal command (you can try a few times): st-flash --connect-under-reset erase
+- Execute the terminal command (you can try a few times): `st-flash --connect-under-reset erase`
 - Whilst the command execute, you can release the reset button and if the silicon gods are with you, that should set the board back into a state where it will allow you to flash it with your new firmware.
 
   
@@ -18,7 +18,10 @@ Companion source code organized by chapter. Each example lives inside a board-sp
 - [Chapter 5 - Hardware Abstraction: From Raw MMIO to HAL](#chapter-5---hardware-abstraction-from-raw-mmio-to-hal)
 - [Chapter 6 - Debugging, Logging, and Profiling](#chapter-6---debugging-logging-and-profiling)
 - [Chapter 7 - Managing Stack and Heap in Resource-Constrained Systems](#chapter-7---managing-stack-and-heap-in-resource-constrained-systems)
-- [Chapter 10 - Rust-C Integration and Migration](#chapter-10---rust-c-integration-and-migration)
+- [Chapter 8 - Rust-C Integration and Migration](#chapter-8---rust-c-integration-and-migration)
+- Chapter 9 - No code
+- [Chapter 10 - Concurrency, Async Programming, and RTOS Integration](#chapter-10---concurrency-async-programming-and-rtos-integration)
+
 
 ---
 
@@ -284,34 +287,69 @@ The Cortex-M4 MPU set up as a hardware stack guard, turning a silent overflow in
 
 ---
 
-## Chapter 10 - Rust-C Integration and Migration
+## Chapter 8 - Rust-C Integration and Migration
 
 ### example_01 - Calling C from Rust: FFI basics and safe wrappers
 
 Calls hand-written C code from Rust, wrapping the `unsafe extern "C"` calls behind ordinary safe functions; `build.rs` compiles and links the C file automatically.
 
-**Available on:** [Blue Pill (STM32F103C8T6)](CH10/example_01/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_01/NUCLEO_STM32F103RBT6)
+**Available on:** [Blue Pill (STM32F103C8T6)](CH08/example_01/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH08/example_01/NUCLEO_STM32F103RBT6)
 
 ### example_02 - Calling Rust from C: a `no_std` static library
 
 Flips the usual shape: a plain C application owns `main()` and the vector table, linking against a Rust `no_std` static library built separately.
 
-**Available on:** [Blue Pill (STM32F103C8T6)](CH10/example_02/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_02/NUCLEO_STM32F103RBT6)
+**Available on:** [Blue Pill (STM32F103C8T6)](CH08/example_02/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH08/example_02/NUCLEO_STM32F103RBT6)
 
 ### example_03 - Advanced FFI: arrays, C strings, and stateful callbacks
 
 The harder FFI cases: passing slices as pointer + length, `&CStr` instead of `&str`, and a context-carrying C callback pattern.
 
-**Available on:** [Blue Pill (STM32F103C8T6)](CH10/example_03/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_03/NUCLEO_STM32F103RBT6)
+**Available on:** [Blue Pill (STM32F103C8T6)](CH08/example_03/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH08/example_03/NUCLEO_STM32F103RBT6)
 
 ### example_04 - bindgen: generating Rust bindings from a real C library
 
 Uses *bindgen* to generate Rust FFI bindings from a real third-party C library ([zserge/jsmn](https://github.com/zserge/jsmn)), including a fix for an enum-sizing mismatch between `arm-none-eabi-gcc` and libclang.
 
-**Available on:** [Blue Pill (STM32F103C8T6)](CH10/example_04/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_04/NUCLEO_STM32F103RBT6)
+**Available on:** [Blue Pill (STM32F103C8T6)](CH08/example_04/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH08/example_04/NUCLEO_STM32F103RBT6)
 
 ### example_05 - cbindgen: generating a C header from Rust
 
 The inverse of example_04: *cbindgen* generates a C header automatically from a Rust `checksum()` function, regenerated on every build.
 
-**Available on:** [Blue Pill (STM32F103C8T6)](CH10/example_05/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_05/NUCLEO_STM32F103RBT6)
+**Available on:** [Blue Pill (STM32F103C8T6)](CH08/example_05/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH08/example_05/NUCLEO_STM32F103RBT6)
+
+---
+
+## Chapter 10 - Concurrency, Async Programming, and RTOS Integration
+
+### example_01 - Fan state machine driven by button interrupts
+
+A fan controller as an explicit state machine (`FanState`, `Event`, `Fan`) rather than boolean flags, advanced by two button interrupts; the transition table lives in `lib.rs` and is unit-tested on the host, separate from the interrupt-driven `main.rs`.
+
+**Available on:** [Blue Pill (STM32F103C8T6)](CH10/example_01/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_01/NUCLEO_STM32F103RBT6)
+
+### example_02 - Fan state machine rebuilt with Embassy
+
+The same fan controller and state machine from example_01, reimplemented as an async Embassy task: interrupts and critical sections give way to `.await` and `select()` racing a button press against a simulated tachometer timeout.
+
+**Available on:** [Blue Pill (STM32F103C8T6)](CH10/example_02/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_02/NUCLEO_STM32F103RBT6)
+
+### example_03 - Preempting a busy task with an interrupt executor
+
+A higher-priority Embassy interrupt executor preempts a lower-priority thread-mode task stuck in a busy loop that hasn't reached an `.await`, stopping a blinking LED mid-blink via a shared, mutex-protected flag.
+
+**Available on:** [Blue Pill (STM32F103C8T6)](CH10/example_03/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_03/NUCLEO_STM32F103RBT6)
+
+### example_04 - Traffic light with RTIC
+
+An RTIC 2 traffic light cycling three LEDs through green, yellow, and red across three prioritized tasks, with an emergency button task that preempts the cycle and holds red for fifteen seconds.
+
+**Available on:** [Blue Pill (STM32F103C8T6)](CH10/example_04/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_04/NUCLEO_STM32F103RBT6)
+
+### example_05 - Rust inside a Zephyr application
+
+A `no_std` Rust static library linked into a Zephyr C application and called via FFI, running as an RTOS thread; byte-for-byte identical Rust and C sources are built for two different boards, only the Zephyr board name changes.
+
+**Available on:** [Blue Pill - stock (STM32F103C8T6)](CH10/example_05/bluepill_stock_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_05/NUCLEO_STM32F103RBT6)
+
