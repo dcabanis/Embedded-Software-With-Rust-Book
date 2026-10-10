@@ -1,0 +1,5 @@
+config LED_PATTERN_RUST
+	bool "Use the Rust implementation of led_pattern()"
+	default y
+
+source "Kconfig.zephyr"

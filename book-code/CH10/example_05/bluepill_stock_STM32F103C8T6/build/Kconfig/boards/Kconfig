@@ -1,4 +1,0 @@
-# Load Zephyr board Kconfig descriptions.
-osource "/home/dcabanis/zephyrproject/zephyr/boards/others/stm32_min_dev/Kconfig"
-config BOARD_REVISION_BLUE
-	def_bool y

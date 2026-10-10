@@ -319,9 +319,15 @@ The inverse of example_04: *cbindgen* generates a C header automatically from a 
 
 **Available on:** [Blue Pill (STM32F103C8T6)](CH08/example_05/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH08/example_05/NUCLEO_STM32F103RBT6)
 
+### example_06 - Rust inside a Zephyr application
+
+A `no_std` Rust static library linked into a Zephyr C application and called from the main thread, with a Kconfig option (`CONFIG_LED_PATTERN_RUST`) that switches back to the original C implementation without editing any source. Byte-for-byte identical sources are built for two boards; only the Zephyr board name changes.
+
+**Available on:** [Blue Pill - stock (STM32F103C8T6)](CH08/example_06/bluepill_stock_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH08/example_06/NUCLEO_STM32F103RBT6)
+
 ---
 
-## Chapter 10 - Concurrency, Async Programming, and RTOS Integration
+## Chapter 10 - Concurrency and Async Programming
 
 ### example_01 - Fan state machine driven by button interrupts
 
@@ -346,10 +352,3 @@ A higher-priority Embassy interrupt executor preempts a lower-priority thread-mo
 An RTIC 2 traffic light cycling three LEDs through green, yellow, and red across three prioritized tasks, with an emergency button task that preempts the cycle and holds red for fifteen seconds.
 
 **Available on:** [Blue Pill (STM32F103C8T6)](CH10/example_04/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_04/NUCLEO_STM32F103RBT6)
-
-### example_05 - Rust inside a Zephyr application
-
-A `no_std` Rust static library linked into a Zephyr C application and called via FFI, running as an RTOS thread; byte-for-byte identical Rust and C sources are built for two different boards, only the Zephyr board name changes.
-
-**Available on:** [Blue Pill - stock (STM32F103C8T6)](CH10/example_05/bluepill_stock_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_05/NUCLEO_STM32F103RBT6)
-

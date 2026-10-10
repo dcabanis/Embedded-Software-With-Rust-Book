@@ -1,5 +1,0 @@
-west:
-  command: /home/dcabanis/zephyrproject/.venv/bin/west build -p always -b stm32_min_dev@blue
-    -d build .
-  topdir: /home/dcabanis/zephyrproject
-  version: 1.5.0

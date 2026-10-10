@@ -1,0 +1,3 @@
+language = "C"
+include_guard = "LED_LOGIC_H"
+documentation = false
