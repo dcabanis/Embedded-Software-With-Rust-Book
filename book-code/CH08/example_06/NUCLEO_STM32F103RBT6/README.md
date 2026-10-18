@@ -1,12 +1,10 @@
 # example_06 Rust inside a Zephyr application (NUCLEO-F103RB)
 
-Companion code for section 8.7, *Worked example: a Rust component in a Zephyr application*, ported to the **NUCLEO-F103RB**. Zephyr keeps the main thread, the GPIO driver, and the build; Rust supplies one pure-logic function, `led_pattern()`. A Kconfig option, `CONFIG_LED_PATTERN_RUST`, selects between the Rust implementation and the original C one, so the migration can be reverted without editing any source.
+Zephyr keeps the main thread, the GPIO driver, and the build; Rust supplies one pure-logic function, `led_pattern()`. A Kconfig option, `CONFIG_LED_PATTERN_RUST`, selects between the Rust implementation and the original C one, so the migration can be reverted without editing any source.
 
-LD2 (the green user LED, near the Arduino D13 pin) shows two short flashes followed by a longer pause, repeating about every two seconds. LD1 (red/green, near the USB connector) is ST-LINK activity and LD3 (red) is power; neither is driven by this firmware.
+LD2 (the green user LED, near the Arduino D13 pin) shows two short flashes followed by a longer pause, repeating about every two seconds. 
 
-Confirmed on real hardware (2026-10-10): the Rust build gives two flashes; changing the match arm to `0 | 2 | 4` gives three, with no C edits; rebuilding with `-DCONFIG_LED_PATTERN_RUST=n` returns to two flashes from the C fallback.
-
-This project replaces `CH10/example_05/NUCLEO_STM32F103RBT6` (since removed; it is still in the git history), which predates the move of the Zephyr section to chapter 8. Compared with that version, it adds the Kconfig switch and the C fallback, uses a hand-written panic handler instead of `panic-halt`, and generates the header from a `cbindgen.toml`.
+The Rust build gives two flashes; changing the match arm to `0 | 2 | 4` gives three, with no C edits; rebuilding with `-DCONFIG_LED_PATTERN_RUST=n` returns to two flashes from the C fallback.
 
 ## Board
 
@@ -16,7 +14,7 @@ Every source file (`CMakeLists.txt`, `Kconfig`, `prj.conf`, `src/`, `include/`, 
 
 ## Environment
 
-Tested with Zephyr 4.2.0, Zephyr SDK 0.17.2, Rust 1.98.1, and cbindgen 0.29.0.
+Built with Zephyr 4.2.0, Zephyr SDK 0.17.2, Rust 1.98.1, and cbindgen 0.29.0.
 
 If you don't have a Zephyr workspace yet:
 
@@ -107,27 +105,15 @@ The last two commands matter. They write `DHCSR` (the Cortex-M Debug Halting Con
 
 ### About `west flash`
 
-Section 8.7.4 of the book flashes with `west flash -d build`. That command was **not** used to test this example; every successful flash here used the OpenOCD command above. Avoid `west flash` on this board for now:
+The `west flash -d build` command was **not** used to test this example; every successful flash here used the OpenOCD command above. Avoid `west flash` on this board for now:
 
 - `west flash --runner openocd` (the Zephyr SDK's bundled OpenOCD) wrote the image in earlier testing, then failed with a `FATAL ERROR` during its post-flash reset.
 - Its flash sequence ends with a reset, much like `program ... verify reset exit`, which is the sequence that left `C_DEBUGEN` set and froze the LED in our testing. We haven't checked whether `west flash` does the same, so treat a frozen LED after `west flash` as this problem first.
 
 If the LED stays solidly on or off after a successful flash, suspect the debug state before suspecting the code: clear `DHCSR` as above, or power-cycle the board.
 
-The NUCLEO's on-board ST-LINK only reaches the F103 on the board when **both CN2 jumpers are fitted**. With them removed, the ST-LINK programs an external target through CN4 instead, and the probe reports no target (`st-info --probe` shows `chipid: 0x000`).
-
 ## Try it
 
 1. Flash the Rust build: two short flashes, then a pause.
 2. Change the Rust match arm in `rust/led_logic/src/lib.rs` from `0 | 2` to `0 | 2 | 4`, rebuild the archive, rebuild and flash: three flashes, without touching any C.
 3. Rebuild with `-- -DCONFIG_LED_PATTERN_RUST=n` and flash: back to two flashes, now from `src/led_pattern.c`.
-
-## Notes
-
-**Why plain OpenOCD rather than `west flash` or probe-rs.** With the SDK's bundled OpenOCD, `west flash --runner openocd` wrote the image in earlier testing but then failed with a `FATAL ERROR` during its post-flash reset. The earlier version of this example used `probe-rs download --chip STM32F103RBTx --connect-under-reset` instead. With probe-rs 0.32, that now fails with `SwdApWdataError` on this board, while OpenOCD and `st-info --connect-under-reset` attach fine through the same probe.
-
-**Zephyr's idle `wfi` disturbs SWD on the STM32F1.** When no thread is ready, Zephyr's idle loop executes `wfi`, which gates the debug clock just as in the bare-metal examples. A debugger command issued while the board idles fails to attach (`SwdApWdataError`, or OpenOCD's "communication failure"); connecting under reset recovers it. For live debugging, build with `-- -DCONFIG_STM32_ENABLE_DEBUG_SLEEP_STOP=y`, which keeps the debug port and the system tick running in sleep.
-
-**The boot banner is a quick health check.** The ST-LINK's virtual COM port (`/dev/ttyACM0`, 115200 8N1) carries Zephyr's console. `*** Booting Zephyr OS build v4.2.0 ***` confirms the kernel reached console initialization; silence after a reset points to a problem before any application code, or any call into Rust, runs.
-
-**The Rust build is about 1.1 KB larger than the C build** (15,260 B vs 14,132 B of flash). Hardly any of that is `led_pattern()`. A Rust `staticlib` bundles `compiler_builtins`, and its `memcpy`, `memset`, `__aeabi_uldivmod`, and `__udivmoddi4` resolve Zephyr's own references to those functions instead of the C library's versions. See the Blue Pill variant's README for details.

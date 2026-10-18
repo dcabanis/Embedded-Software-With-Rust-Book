@@ -29,9 +29,8 @@ async fn fan_task(
     tach_exti: Peri<'static, peripherals::EXTI4>,
     led_pin: Peri<'static, peripherals::PB8>,
 ) {
-    // Both buttons on this board read active-low with an internal pull-up
-    // (idle high, pressed low) — the opposite polarity from the pull-down
-    // circuit in section 8.3.2's text, so presses are falling edges here.
+    // Both buttons read active-low with an internal pull-up (idle high,
+    // pressed low), so presses are falling edges.
     let mut button = ExtiInput::new(button_pin, button_exti, Pull::Up, Irqs);
     // Stands in for a real tachometer: press repeatedly within 200 ms to
     // simulate a running motor's pulses, or stop pressing to simulate a

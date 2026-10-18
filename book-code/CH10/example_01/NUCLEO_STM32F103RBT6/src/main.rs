@@ -54,12 +54,12 @@ fn main() -> ! {
     button.clear_interrupt_pending_bit();
     button.enable_interrupt(&mut exti);
 
-    // Stands in for a tachometer or other stall sensor, which chapter
-    // 8.2.2 leaves outside the example. There is no onboard second button
-    // on this board, so this is exactly the external circuit chapter
-    // 8.2.2 describes: a momentary button wired between PA0 and 3.3 V,
-    // with the internal pull-down giving the released input a defined
-    // low level and a rising edge marking the press.
+    // Stands in for a tachometer or other stall sensor, which section
+    // 10.2.2 leaves outside the example. There is no onboard second button
+    // on this board, so this is an external circuit: a momentary button
+    // wired between PA0 and 3.3 V, with the internal pull-down giving the
+    // released input a defined low level and a rising edge marking the
+    // press.
     let mut stall = gpioa.pa0.into_pull_down_input(&mut gpioa.crl);
     stall.make_interrupt_source(&mut afio);
     stall.trigger_on_edge(&mut exti, Edge::Rising);

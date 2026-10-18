@@ -52,7 +52,7 @@ fn main() -> ! {
     led.set_high();
 
     // Both buttons read active-low with the internal pull-up enabled
-    // (idle high, pressed low), confirmed by testing on this board.
+    // (idle high, pressed low).
     // PB3 and PB4 each have their own dedicated EXTI vector (EXTI3,
     // EXTI4), unlike PC13 on the NUCLEO port, which shares EXTI15_10
     // with seven other pins — so no interrupt-source disambiguation is
@@ -64,7 +64,7 @@ fn main() -> ! {
     button.enable_interrupt(&mut exti);
 
     // Stands in for a tachometer or other stall sensor, which chapter
-    // 8.2.2 leaves outside the example; pressing this button submits
+    // 10.2.2 leaves outside the example; pressing this button submits
     // Event::StallDetected the same way a real sensor handler would.
     let mut stall = pb4.into_pull_up_input(&mut gpiob.crl);
     stall.make_interrupt_source(&mut afio);

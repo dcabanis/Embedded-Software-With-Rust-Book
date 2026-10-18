@@ -20,7 +20,7 @@ Companion source code organized by chapter. Each example lives inside a board-sp
 - [Chapter 7 - Managing Stack and Heap in Resource-Constrained Systems](#chapter-7---managing-stack-and-heap-in-resource-constrained-systems)
 - [Chapter 8 - Rust-C Integration and Migration](#chapter-8---rust-c-integration-and-migration)
 - Chapter 9 - No code
-- [Chapter 10 - Concurrency, Async Programming, and RTOS Integration](#chapter-10---concurrency-async-programming-and-rtos-integration)
+- [Chapter 10 - Concurrency and Async Programming](#chapter-10---concurrency-and-async-programming)
 
 
 ---
@@ -347,8 +347,14 @@ A higher-priority Embassy interrupt executor preempts a lower-priority thread-mo
 
 **Available on:** [Blue Pill (STM32F103C8T6)](CH10/example_03/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_03/NUCLEO_STM32F103RBT6)
 
-### example_04 - Traffic light with RTIC
+### example_04 - Periodic acquisition and processing with Embassy
+
+A `Ticker`-driven sampling task on an Embassy interrupt executor reads the internal ADC temperature sensor every 10 ms and queues the readings in a bounded `Channel`, while a thread-mode task processes them. A deliberately slow processing step overflows the queue so the consumer can detect lost readings from gaps in the sequence numbers.
+
+**Available on:** [Blue Pill (STM32F103C8T6)](CH10/example_04/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_04/NUCLEO_STM32F103RBT6)
+
+### example_05 - Traffic light with RTIC
 
 An RTIC 2 traffic light cycling three LEDs through green, yellow, and red across three prioritized tasks, with an emergency button task that preempts the cycle and holds red for fifteen seconds.
 
-**Available on:** [Blue Pill (STM32F103C8T6)](CH10/example_04/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_04/NUCLEO_STM32F103RBT6)
+**Available on:** [Blue Pill (STM32F103C8T6)](CH10/example_05/bluepill_STM32F103C8T6) · [NUCLEO-F103RB (STM32F103RBT6)](CH10/example_05/NUCLEO_STM32F103RBT6)

@@ -1,0 +1,16 @@
+[package]
+name = "app"
+version = "0.1.0"
+authors = ["David Cabanis <davidcabanis@gmail.com>"]
+edition = "2021"
+
+[profile.release]
+debug = 2
+
+[dependencies]
+rtic = { version = "=2.2.0", features = ["thumbv7-backend"] }
+rtic-monotonics = { version = "=2.1.0", features = ["cortex-m-systick"] }
+stm32f1xx-hal = { version = "0.11", features = ["stm32f103", "medium"] }
+panic-halt = "=1.0.0"
+cortex-m = { version = "=0.7.7", features = ["critical-section-single-core"] }
+cortex-m-semihosting = "0.5"

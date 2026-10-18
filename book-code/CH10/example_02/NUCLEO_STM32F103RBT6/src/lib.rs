@@ -1,6 +1,6 @@
 #![cfg_attr(not(test), no_std)]
 
-//! The fan state machine from section 8.2.1, kept separate from the firmware
+//! The fan state machine from section 10.2.1, kept separate from the firmware
 //! entry point so its transition table can be unit-tested on the host.
 
 #[derive(Clone, Copy, PartialEq, Debug)]

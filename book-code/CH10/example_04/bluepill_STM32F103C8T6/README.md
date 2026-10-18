@@ -1,28 +1,20 @@
-# example_04 — Traffic light with RTIC (STM32F103C8T6)
+# example_04 - Periodic acquisition and processing with Embassy (STM32F103C8T6)
 
-This is the RTIC 2 traffic-light demonstration from section 8.4: a normal task cycles three LEDs through green, yellow, and red, while an emergency button preempts that sequence and holds red for fifteen seconds. It illustrates RTIC's task priorities and shared-resource locking rather than extending the `Fan` state machine from earlier examples — there is no `Fan`/`FanState`/`Event` here.
+This is a separate demo from examples 01/02, building on example_03's two-executor arrangement to illustrate: a sampling task reads a measurement every 10 ms with a `Ticker` and queues it in a bounded `Channel`, while a second task processes the queued readings.
 
-Three tasks:
+Two tasks run on two executors:
 
-| Task                  | Kind            | Priority | Responsibility                                          |
-| --------------------- | --------------- | -------- | -------------------------------------------------------- |
-| `traffic_cycle`       | Software, async | 1        | Advance the normal sequence when no override is active   |
-| `resume_normal`       | Software, async | 2        | Wait fifteen seconds, then release the override          |
-| `emergency_override`  | Hardware, EXTI3 | 3        | Acknowledge the button and start an override              |
+- `sample_current()` runs on an **interrupt executor** (bound to the otherwise unused USART2 vector at NVIC priority P6). Every 10 ms it reads the ADC, stamps the reading with a sequence number, and calls `try_send()` on a `Channel<_, Sample, 8>`. If the queue is full, the new reading is discarded and sampling carries on.
+- `process_samples()` runs on the **thread-mode executor**. It receives each `Sample`, compares its sequence number with the one it expected, reports any gap, then calls `process_current()`.
+
+`process_current()` stands in for the real processing step. It normally busy-waits about 1 ms. Every 64th call it busy-waits 150 ms, which is more than the 80 ms of readings the queue can hold (8 entries × 10 ms). The interrupt executor preempts that long calculation, so sampling continues, the queue fills, and the consumer then sees a gap of about seven missing sequence numbers.
 
 ## Hardware
 
-Same board as the other CH08 examples. Pin roles reuse already-validated pins rather than the text's fresh PA0-PA3, since this example needs three LEDs simultaneously and this board happens to have exactly three good ones:
+Same board as the other Blue Pill examples. No wiring is needed.
 
-- **Green**: **PB8**, active-low.
-- **Yellow**: **PB9**, active-low.
-- **Red**: **PA9**, active-low. (The board's fourth LED, PA10, is excluded here as in every other CH08 example on this board — it lit noticeably dimmer during discovery testing.)
-- **Emergency button**: **PB3**, internal pull-up, active-low, triggers on the falling edge — the opposite polarity from section 8.4.2's text, which wires its button to PA0 with a pull-down and a rising edge. PB3 defaults to a JTAG signal (JTDO) on this chip and is released the same way as in examples 01-03.
-- The button's interrupt is bound to **EXTI3** (`binds = EXTI3` in the `emergency_override` task), not the text's `EXTI0`, since that's PB3's dedicated vector.
-
-None of these LED colors are guaranteed to correspond to this board's actual LED colors — "green"/"yellow"/"red" here just name the three positions in the sequence, matching the text's naming.
-
-Confirmed on real hardware: the three LEDs cycle in sequence (~10 s / ~3 s / ~8 s), and pressing PB3 at any point immediately forces the red LED on and holds it for ~15 seconds before the cycle resumes, logging `emergency override engaged` then `emergency override released`.
+- **Measurement**: the STM32's **internal temperature sensor** (ADC1 channel 16) stands in for a motor-current sensor, with a 239.5-cycle sample time. The raw 12-bit value is not converted to any unit.
+- **LED**: **PB8**, active-low ("high means off"). It turns on when the consumer detects a gap and turns off again at the next summary line.
 
 ## Build
 
@@ -38,22 +30,30 @@ cargo build --release
 cargo run --release
 ```
 
-Expected sequence:
+Output captured on a Blue Pill (the exact sequence numbers will differ from run to run):
 
 ```
-traffic light ready
+current sampling demo ready
+gap: 7 samples lost before #79
+gap: 7 samples lost before #150
+gap: 7 samples lost before #221
+gap: 7 samples lost before #292
+gap: 7 samples lost before #363
+gap: 1 samples lost before #375
+gap: 7 samples lost before #435
+gap: 7 samples lost before #506
+received 500, lost 50, last raw 1760
 ```
 
-The three LEDs then cycle indefinitely. Press PB3 at any point:
+The long calculation happens every 64th processed reading and costs 7 lost readings, so the main gaps are 71 sequence numbers apart (79, 150, 221, ...). The summary line appears every 500 received samples. The raw value stays near 1760 because it is the on-chip temperature sensor at room temperature (about 1.42 V on the 12-bit scale).
 
-```
-emergency override engaged
-emergency override released
-```
+Depending on how the debugger is attached, you may also see occasional smaller gaps of 1 to 4 readings, and rarely a larger one. These come from the logging itself: `hprintln!` halts the core while the debugger services each print, which delays the sampler. They are not part of the design, and a plain `cargo run --release` in a terminal often shows none.
 
-Further presses while the fifteen-second hold is already active are acknowledged (the button's interrupt still fires and clears) but produce no new log line and no controller change — `resume_normal::spawn()` returns an error while that task is still active, so `emergency_override` skips the controller update entirely.
+## Experiment: sampler on the same executor
 
-## Run — Path B: OpenOCD (flash only)
+`SAMPLER_PREEMPTS` at the top of `src/main.rs` selects where `sample_current()` runs. Set it to `false` to put both tasks on the thread-mode executor. During the 150 ms calculation the sampler can no longer be polled, so nothing is discarded and the gap lines disappear (on hardware, only `received N, lost 0` lines are printed), but the readings are taken late: `Ticker` catches up afterwards, producing closely spaced reads for ticks that were already overdue. This is the behaviour the section describes for a long calculation sharing an executor with acquisition.
+
+## Run - Path B: OpenOCD (flash only)
 
 `run_openocd.sh` flashes the firmware but does not decode semihosting output; use Path A to see the log.
 
@@ -64,23 +64,10 @@ cargo build
 
 ## Notes
 
-**No host tests for this example** — there is no pure-logic type worth isolating the way `Fan` was in examples 01/02; `Controller`'s methods are thin GPIO wrappers, and the interesting behavior (priorities, preemption, locking) is inherently a hardware/RTIC-runtime property.
+**`USART2` is borrowed only for its NVIC vector**, as in example_03. Don't add a UART driver to this project without picking a different vector.
 
-**`stm32f1xx-hal` 0.11's clock configuration differs from the text**, which was written against 0.10. In 0.10, `Rcc` had a public `cfgr` field providing `.use_hse().sysclk().pclk1().freeze(&mut flash.acr)` directly. In 0.11, that field is gone; instead a separate `rcc::Config` builder is passed into `Rcc::freeze()`, and the resulting `Rcc`'s `clocks` field replaces the separate `Clocks` value 0.10's `freeze()` returned:
+**`ADC1_2` is bound with `bind_interrupts!`.** On the STM32F1, `Adc::read()` waits for the end-of-conversion interrupt, and this handler wakes the sampling task. The ADC interrupt keeps its default (highest) NVIC priority, above the executor's P6, so a conversion can complete while the executor is mid-poll.
 
-```rust
-let rcc = ctx.device.RCC.constrain();
-let mut rcc = rcc.freeze(
-    Config::hse(8.MHz()).sysclk(36.MHz()).pclk1(36.MHz()),
-    &mut flash.acr,
-);
-Mono::start(ctx.core.SYST, rcc.clocks.sysclk().raw());
-```
+**Semihosting stops the core.** `hprintln!` halts the processor while the debugger services the call. Output is therefore limited to gap reports and one summary every 500 samples, and it is printed from the thread-mode task, not the sampler. Sampling is delayed while a print is in progress, which is a limitation of this logging method, not of the Embassy design.
 
-`AFIO.constrain()` and `GPIOx.split()` also now take `&mut rcc` (matching every other CH08 example's `stm32f1xx-hal` usage) rather than the text's argument-less 0.10 calls.
-
-**PB3 defaults to a JTAG pin function** on this chip (JTDO), same as examples 01-03. `init()` releases it (and PA15/PB4, JTDI/JTRST, as an unavoidable side effect of the same AFIO register bit) via `afio.mapr.disable_jtag(...)`, exactly as in example_01.
-
-**`USART1`/`USART2` are borrowed only as RTIC dispatchers**, not used as UARTs. They schedule the two software tasks (`traffic_cycle` at priority 1, `resume_normal` at priority 2) rather than handling any UART traffic. Don't add a UART driver to this project without picking different vectors.
-
-**Uses `memory.x`, not `embassy-stm32`'s `memory-x` feature** — this example is `stm32f1xx-hal`/RTIC based, not Embassy (examples 02/03 use Embassy and get their memory layout from the `memory-x` feature instead), so it needs the same hand-written `memory.x` as example_01.
+**No `memory.x` file**,`embassy-stm32`'s `memory-x` feature supplies it.

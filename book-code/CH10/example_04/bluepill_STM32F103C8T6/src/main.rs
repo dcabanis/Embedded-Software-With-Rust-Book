@@ -1,201 +1,136 @@
 #![no_std]
 #![no_main]
 
+//! Periodic acquisition and processing, from section 10.3.5.
+//!
+//! `sample_current()` reads a measurement every 10 ms with a `Ticker` and
+//! queues it in a bounded `Channel`; `process_samples()` drains the queue.
+//! Every 64th measurement the processing step deliberately takes 150 ms, far
+//! longer than the queue can absorb (8 entries x 10 ms), so the consumer sees
+//! gaps in the sequence numbers and reports them.
+
+use core::sync::atomic::{AtomicU32, Ordering};
+
+use cortex_m_semihosting::hprintln;
+use embassy_executor::{Executor, InterruptExecutor};
+use embassy_stm32::adc::{Adc, SampleTime, Temperature};
+use embassy_stm32::gpio::{Level, Output, Speed};
+use embassy_stm32::interrupt::{InterruptExt, Priority};
+use embassy_stm32::{bind_interrupts, interrupt, peripherals};
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use embassy_sync::channel::Channel;
+use embassy_time::{Duration, Instant, Ticker};
 use panic_halt as _;
-use rtic_monotonics::systick::prelude::*;
+use static_cell::StaticCell;
 
-systick_monotonic!(Mono, 1_000); // One tick per millisecond.
+// Where does sample_current() run? `true` puts it on the interrupt executor,
+// so it preempts a long process_current(). `false` puts both tasks on the
+// thread-mode executor, which cannot poll the sampler while a calculation
+// runs. Change it and compare the log.
+const SAMPLER_PREEMPTS: bool = true;
 
-#[rtic::app(
-    device = stm32f1xx_hal::pac,
-    dispatchers = [USART1, USART2]
-)]
-mod app {
-    use super::Mono;
-    use cortex_m_semihosting::hprintln;
-    use rtic_monotonics::systick::prelude::*;
-    use stm32f1xx_hal::{
-        gpio::{
-            gpioa::PA9,
-            gpiob::{PB3, PB8, PB9},
-            Edge, ExtiPin, Input, Output, PullUp, PushPull,
-        },
-        prelude::*,
-        rcc::Config,
-    };
+struct Sample {
+    sequence: u32,
+    raw: u16,
+}
 
-    #[derive(Clone, Copy)]
-    enum Phase {
-        Green,
-        Yellow,
-        Red,
-    }
+static SAMPLES: Channel<CriticalSectionRawMutex, Sample, 8> = Channel::new();
 
-    pub struct Controller {
-        green: PB8<Output<PushPull>>,
-        yellow: PB9<Output<PushPull>>,
-        red: PA9<Output<PushPull>>,
-        phase: Phase,
-        override_active: bool,
-        remaining_ms: u32,
-    }
+static EXECUTOR_HIGH: InterruptExecutor = InterruptExecutor::new();
+static EXECUTOR_LOW: StaticCell<Executor> = StaticCell::new();
 
-    impl Controller {
-        fn show(&mut self, phase: Phase) {
-            // Switch off the previous output before enabling the next one.
-            // These LEDs are active-low: HIGH = off, LOW = on.
-            self.green.set_high();
-            self.yellow.set_high();
-            self.red.set_high();
+// The F1 ADC wakes the waiting task from its end-of-conversion interrupt.
+bind_interrupts!(struct Irqs {
+    ADC1_2 => embassy_stm32::adc::InterruptHandler<peripherals::ADC1>;
+});
 
-            match phase {
-                Phase::Green => self.green.set_low(),
-                Phase::Yellow => self.yellow.set_low(),
-                Phase::Red => self.red.set_low(),
-            }
+#[embassy_executor::task]
+async fn sample_current(mut adc: Adc<'static, peripherals::ADC1>, mut channel: Temperature) {
+    let mut ticker = Ticker::every(Duration::from_millis(10));
+    let mut sequence = 0_u32;
 
-            self.phase = phase;
-        }
+    loop {
+        ticker.next().await;
+        let raw = adc.read(&mut channel, SampleTime::CYCLES239_5).await;
+        let sample = Sample { sequence, raw };
+        sequence = sequence.wrapping_add(1);
 
-        fn advance(&mut self) {
-            let (next, duration_ms) = match self.phase {
-                Phase::Red => (Phase::Green, 10_000),
-                Phase::Green => (Phase::Yellow, 3_000),
-                Phase::Yellow => (Phase::Red, 8_000),
-            };
-
-            self.show(next);
-            self.remaining_ms = duration_ms;
+        if SAMPLES.try_send(sample).is_err() {
+            // Discard this new sample when the queue is full.
+            // Keep sampling instead of waiting for the consumer.
         }
     }
+}
 
-    #[shared]
-    struct Shared {
-        controller: Controller,
-    }
+#[embassy_executor::task]
+async fn process_samples(mut led: Output<'static>) {
+    let mut expected = 0_u32;
+    let mut received = 0_u32;
+    let mut lost = 0_u32;
 
-    #[local]
-    struct Local {
-        emergency_btn: PB3<Input<PullUp>>,
-    }
+    loop {
+        let sample = SAMPLES.receive().await;
+        let dropped = sample.sequence.wrapping_sub(expected);
+        expected = sample.sequence.wrapping_add(1);
 
-    #[init]
-    fn init(ctx: init::Context) -> (Shared, Local) {
-        let mut flash = ctx.device.FLASH.constrain();
-        let rcc = ctx.device.RCC.constrain();
-        // stm32f1xx-hal 0.11 replaced 0.10's `rcc.cfgr` builder (used in
-        // the text) with a `Config` passed directly to `Rcc::freeze()`;
-        // the resulting `Rcc`'s `clocks` field replaces the separate
-        // `Clocks` value 0.10's `freeze()` used to return.
-        let mut rcc = rcc.freeze(
-            Config::hse(8.MHz()).sysclk(36.MHz()).pclk1(36.MHz()),
-            &mut flash.acr,
-        );
+        if dropped != 0 {
+            lost = lost.wrapping_add(dropped);
+            hprintln!("gap: {} samples lost before #{}", dropped, sample.sequence);
+            led.set_low(); // Active-low LED on: a gap was seen.
+        }
+        process_current(sample.raw);
+        received = received.wrapping_add(1);
 
-        // Start SysTick using the actual configured CPU clock frequency.
-        Mono::start(ctx.core.SYST, rcc.clocks.sysclk().raw());
-
-        let mut afio = ctx.device.AFIO.constrain(&mut rcc);
-        let mut exti = ctx.device.EXTI;
-        let mut gpioa = ctx.device.GPIOA.split(&mut rcc);
-        let mut gpiob = ctx.device.GPIOB.split(&mut rcc);
-
-        // PB3 defaults to a JTAG signal (JTDO) on this chip, so it must be
-        // released before it behaves as plain GPIO. This also frees PA15
-        // and PB4 (JTDI and JTRST) as a side effect of the same call, even
-        // though this example does not use them. SWD debugging keeps
-        // working afterward.
-        let (_pa15, pb3, _pb4) = afio.mapr.disable_jtag(gpioa.pa15, gpiob.pb3, gpiob.pb4);
-
-        let mut controller = Controller {
-            green: gpiob.pb8.into_push_pull_output(&mut gpiob.crh),
-            yellow: gpiob.pb9.into_push_pull_output(&mut gpiob.crh),
-            red: gpioa.pa9.into_push_pull_output(&mut gpioa.crh),
-            phase: Phase::Red,
-            override_active: false,
-            remaining_ms: 0,
-        };
-        controller.show(Phase::Red);
-
-        // This board's buttons read active-low with an internal pull-up
-        // (idle high, pressed low), confirmed on this board in examples
-        // 01-03 — the opposite polarity from the pull-down/rising-edge
-        // circuit section 8.4.2 describes, so we trigger on the falling
-        // edge instead.
-        let mut button = pb3.into_pull_up_input(&mut gpiob.crl);
-        button.make_interrupt_source(&mut afio);
-        button.trigger_on_edge(&mut exti, Edge::Falling);
-        button.clear_interrupt_pending_bit();
-        button.enable_interrupt(&mut exti);
-
-        hprintln!("traffic light ready");
-
-        // Request the background task; it starts after init returns.
-        traffic_cycle::spawn().unwrap();
-
-        (
-            Shared { controller },
-            Local {
-                emergency_btn: button,
-            },
-        )
-    }
-
-    const CHECK_MS: u32 = 100;
-
-    #[task(priority = 1, shared = [controller])]
-    async fn traffic_cycle(mut ctx: traffic_cycle::Context) {
-        loop {
-            ctx.shared.controller.lock(|controller| {
-                // Change color only when the countdown has finished
-                // and the emergency hold is inactive.
-                if !controller.override_active && controller.remaining_ms == 0 {
-                    controller.advance();
-                }
-            });
-
-            // Wait without holding the controller lock.
-            Mono::delay(CHECK_MS.millis()).await;
-
-            ctx.shared.controller.lock(|controller| {
-                if !controller.override_active {
-                    // Reduce the countdown, stopping at zero.
-                    controller.remaining_ms = controller.remaining_ms.saturating_sub(CHECK_MS);
-                }
-            });
+        if received % 500 == 0 {
+            hprintln!("received {}, lost {}, last raw {}", received, lost, sample.raw);
+            led.set_high(); // LED off again.
         }
     }
+}
 
-    #[task(
-        binds = EXTI3,
-        priority = 3,
-        shared = [controller],
-        local = [emergency_btn]
-    )]
-    fn emergency_override(mut ctx: emergency_override::Context) {
-        // Acknowledge the button interrupt.
-        ctx.local.emergency_btn.clear_interrupt_pending_bit();
+static CALLS: AtomicU32 = AtomicU32::new(0);
 
-        // Begin a hold only if no resume_normal task is already active.
-        if resume_normal::spawn().is_ok() {
-            hprintln!("emergency override engaged");
-            ctx.shared.controller.lock(|controller| {
-                controller.override_active = true;
-                controller.remaining_ms = 0;
-                controller.show(Phase::Red);
-            });
-        }
+/// Stands in for the processing step. Normally about 1 ms; every 64th call
+/// it takes 150 ms, like a long filter update.
+fn process_current(_raw: u16) {
+    let calls = CALLS.fetch_add(1, Ordering::Relaxed);
+    let busy_ms = if calls % 64 == 63 { 150 } else { 1 };
+    let end = Instant::now() + Duration::from_millis(busy_ms);
+    while Instant::now() < end {
+        core::hint::spin_loop();
     }
+}
 
-    #[task(priority = 2, shared = [controller])]
-    async fn resume_normal(mut ctx: resume_normal::Context) {
-        // Let the emergency red light remain on for fifteen seconds.
-        Mono::delay(15_000.millis()).await;
+// USART2 is reserved for the high-priority executor, not UART traffic.
+#[interrupt]
+unsafe fn USART2() {
+    unsafe { EXECUTOR_HIGH.on_interrupt() }
+}
 
-        // Permit the normal task to change the lights again.
-        ctx.shared.controller.lock(|controller| {
-            controller.override_active = false;
+#[cortex_m_rt::entry]
+fn main() -> ! {
+    let p = embassy_stm32::init(Default::default());
+
+    hprintln!("current sampling demo ready");
+
+    // The internal temperature sensor stands in for a motor-current sensor.
+    let adc = Adc::new(p.ADC1);
+    let channel = adc.enable_temperature();
+    let led = Output::new(p.PB8, Level::High, Speed::Low);
+
+    interrupt::USART2.set_priority(Priority::P6);
+    let high_spawner = EXECUTOR_HIGH.start(interrupt::USART2);
+
+    let executor = EXECUTOR_LOW.init(Executor::new());
+    if SAMPLER_PREEMPTS {
+        high_spawner.spawn(sample_current(adc, channel).unwrap());
+        executor.run(|spawner| {
+            spawner.spawn(process_samples(led).unwrap());
         });
-        hprintln!("emergency override released");
+    } else {
+        executor.run(|spawner| {
+            spawner.spawn(sample_current(adc, channel).unwrap());
+            spawner.spawn(process_samples(led).unwrap());
+        });
     }
 }
