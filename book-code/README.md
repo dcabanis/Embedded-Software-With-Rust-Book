@@ -1,6 +1,6 @@
 # Code Examples
 
-Companion source code organized by chapter. Each example lives inside a board-specific sub-folder; clone the repo and build only the variant that matches your hardware.
+Companion source code for the book [Embedded Software with Rust](https://www.manning.com/books/embedded-software-with-rust), organized by chapter. Each example lives inside a board-specific sub-folder; clone the repo and build only the variant that matches your hardware.
 
 **PRO Tip:** Hardware boards can be temperamental at times. For one reason or another they stop responding, unwilling to be flashed. If this is something you are experiencing, you can try the following trick:
 
